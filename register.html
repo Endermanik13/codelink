@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Регистрация | CodeLink</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --danger: #f85149;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 40px;
+      margin: 0;
+    }
+    .form-container {
+      max-width: 440px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+    }
+    h2 {
+      margin: 0 0 16px 0;
+      font-size: 24px;
+    }
+    p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin: 0 0 24px 0;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #0d1117;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .error {
+      color: var(--danger);
+      font-size: 14px;
+      margin: 10px 0;
+      min-height: 20px;
+    }
+    .text-center {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    a {
+      color: var(--accent);
+    }
+    .avatar-preview {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin: 10px auto;
+      background: #30363d;
+      display: block;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Создать аккаунт</h2>
+    <p>Присоединяйся к CodeLink — соцсети для разработчиков</p>
+
+    <input type="text" id="username" placeholder="Логин" />
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Пароль" />
+
+    <label>Аватар (опционально)</label>
+    <input type="file" id="avatar" accept="image/*" onchange="previewImage(event)" />
+    <img id="preview" class="avatar-preview" src="https://placehold.co/64x64/58a6ff/ffffff?text=U" alt="Preview">
+
+    <div class="error" id="error"></div>
+    <button class="btn" onclick="register()">Зарегистрироваться</button>
+
+    <p class="text-center">
+      Уже есть аккаунт? <a href="login.html">Войти</a>
+    </p>
+  </div>
+
+  <script>
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const preview = document.getElementById('preview');
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+      }
+    }
+
+    async function register() {
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const avatarFile = document.getElementById('avatar').files[0];
+      const error = document.getElementById('error');
+
+      if (!username || !email || !password) {
+        error.textContent = 'Заполните все поля';
+        return;
+      }
+
+      try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        let photoURL = `https://placehold.co/40x40/58a6ff/ffffff?text=${username[0].toUpperCase()}`;
+
+        if (avatarFile) {
+          const storageRef = firebase.storage().ref();
+          const fileRef = storageRef.child(`avatars/${user.uid}`);
+          await fileRef.put(avatarFile);
+          photoURL = await fileRef.getDownloadURL();
+        }
+
+        await user.updateProfile({
+          displayName: username,
+          photoURL: photoURL
+        });
+
+        alert('Регистрация успешна!');
+        window.location.href = 'index.html';
+      } catch (err) {
+        error.textContent = err.message;
+      }
+    }
+  </script>
+</body>
+</html>

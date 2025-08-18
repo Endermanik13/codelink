@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CodeLink</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <!-- Иконки -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">C<span>ode</span>Link</div>
+    <div class="user-menu" id="user-menu" style="display: none">
+      <img src="" id="user-avatar" class="user-avatar" />
+      <span id="username"></span>
+      <button onclick="logout()" class="btn-ghost">Выйти</button>
+    </div>
+    <div id="auth-buttons">
+      <a href="login.html" class="btn-outline">Войти</a>
+      <a href="register.html" class="btn-primary">Регистрация</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <main class="main-content">
+      <!-- Форма создания поста -->
+      <section class="create-post" id="create-post" style="display: none">
+        <div class="post-creator">
+          <img id="post-avatar" class="creator-avatar" />
+          <div class="post-form">
+            <textarea class="post-input" placeholder="Что у вас нового?"></textarea>
+            <input type="file" id="post-image" accept="image/*" style="display: none" />
+            <div class="post-actions">
+              <button class="media-button" onclick="document.getElementById('post-image').click()">🖼️</button>
+              <button class="post-button" onclick="publish()">Опубликовать</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Лента постов -->
+      <div class="posts" id="posts">Загрузка постов...</div>
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Проверка авторизации
+    firebase.auth().onAuthStateChanged(user => {
+      const authButtons = document.getElementById('auth-buttons');
+      const userMenu = document.getElementById('user-menu');
+      const createPost = document.getElementById('create-post');
+      const postAvatar = document.getElementById('post-avatar');
+
+      if (user) {
+        authButtons.style.display = 'none';
+        userMenu.style.display = 'flex';
+        document.getElementById('username').textContent = user.displayName;
+        document.getElementById('user-avatar').src = user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${user.displayName?.[0]?.toUpperCase() || 'U'}`;
+        if (createPost) {
+          createPost.style.display = 'block';
+          postAvatar.src = user.photoURL || `https://placehold.co/40x40/58a6ff/ffffff?text=${user.displayName?.[0]?.toUpperCase() || 'U'}`;
+        }
+        loadPosts(); // Загружаем посты
+      } else {
+        userMenu.style.display = 'none';
+        authButtons.style.display = 'flex';
+        if (createPost) createPost.style.display = 'none';
+      }
+    });
+
+    function logout() {
+      firebase.auth().signOut();
+      window.location.href = 'index.html';
+    }
+
+    // Публикация поста
+    async function publish() {
+      const input = document.querySelector('.post-input');
+      const fileInput = document.getElementById('post-image');
+      const content = input.value.trim();
+      if (!content) return alert('Введите текст поста');
+
+      const user = firebase.auth().currentUser;
+      let imageUrl = null;
+
+      if (fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const storageRef = firebase.storage().ref();
+        const fileRef = storageRef.child(`posts/${user.uid}/${Date.now()}`);
+        await fileRef.put(file);
+        imageUrl = await fileRef.getDownloadURL();
+      }
+
+      await firebase.firestore().collection('posts').add({
+        uid: user.uid,
+        username: user.displayName,
+        avatar: user.photoURL,
+        content: content,
+        imageUrl: imageUrl,
+        likes: [],
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      input.value = '';
+      fileInput.value = '';
+      loadPosts();
+    }
+
+    // Загрузка постов
+    async function loadPosts() {
+      const container = document.getElementById('posts');
+      try {
+        const snapshot = await firebase.firestore().collection('posts').orderBy('timestamp', 'desc').get();
+        
+        if (snapshot.empty) {
+          container.innerHTML = '<p class="empty">Пока нет постов. Будьте первым!</p>';
+          return;
+        }
+
+        const posts = [];
+        const user = firebase.auth().currentUser;
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const isLiked = data.likes.includes(user?.uid || '');
+          const time = formatTime(data.timestamp);
+
+          posts.push(`
+            <article class="post">
+              <div class="post-header">
+                <img src="${data.avatar || 'https://placehold.co/40x40/58a6ff/ffffff?text=' + (data.username?.[0]?.toUpperCase() || 'U')}" 
+                     class="post-user-avatar" alt="${data.username}">
+                <div class="post-user-info">
+                  <div class="post-user-name">${data.username}</div>
+                  <div class="post-user-meta">@${data.username?.toLowerCase() || 'user'} • ${time}</div>
+                </div>
+              </div>
+              <div class="post-content">
+                <p class="post-text">${data.content}</p>
+                ${data.imageUrl ? `<img src="${data.imageUrl}" class="post-image">` : ''}
+              </div>
+              <div class="post-footer">
+                <div class="post-actions">
+                  <div class="post-action ${isLiked ? 'liked' : ''}" onclick="toggleLike('${doc.id}', ${isLiked})">
+                    <i data-lucide="heart"></i>
+                    <span>${data.likes.length}</span>
+                  </div>
+                  <div class="post-action">
+                    <i data-lucide="message-circle"></i>
+                    <span>0</span>
+                  </div>
+                  <div class="post-action">
+                    <i data-lucide="share-2"></i>
+                    <span>0</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          `);
+        });
+
+        container.innerHTML = posts.join('');
+        lucide.createIcons(); // Перерисовываем иконки
+      } catch (err) {
+        container.innerHTML = `<p class="error">Ошибка: ${err.message}</p>`;
+      }
+    }
+
+    function formatTime(timestamp) {
+      if (!timestamp) return 'только что';
+      const date = timestamp.toDate();
+      const now = new Date();
+      const diffMs = now - date;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      if (diffSec < 60) return 'только что';
+      if (diffMin < 60) return `${diffMin} мин`;
+      if (diffHour < 24) return `${diffHour} ч`;
+      return date.toLocaleDateString();
+    }
+
+    // Лайк
+    window.toggleLike = async (postId, isLiked) => {
+      const user = firebase.auth().currentUser;
+      if (!user) return alert('Войдите, чтобы ставить лайки');
+
+      const postRef = firebase.firestore().collection('posts').doc(postId);
+      const post = await postRef.get();
+      if (!post.exists) return;
+
+      const data = post.data();
+      const likes = data.likes || [];
+      if (isLiked) {
+        const index = likes.indexOf(user.uid);
+        if (index > -1) likes.splice(index, 1);
+      } else {
+        likes.push(user.uid);
+      }
+
+      await postRef.update({ likes });
+      loadPosts();
+    };
+  </script>
+</body>
+</html>

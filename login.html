@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Вход | CodeLink</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --danger: #f85149;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 40px;
+      margin: 0;
+    }
+    .form-container {
+      max-width: 440px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+    }
+    h2 {
+      margin: 0 0 16px 0;
+      font-size: 24px;
+    }
+    p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin: 0 0 24px 0;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #0d1117;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .error {
+      color: var(--danger);
+      font-size: 14px;
+      margin: 10px 0;
+      min-height: 20px;
+    }
+    .text-center {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    a {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Войти в CodeLink</h2>
+    <p>Добро пожаловать обратно</p>
+
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Пароль" />
+
+    <div class="error" id="error"></div>
+    <button class="btn" onclick="login()">Войти</button>
+
+    <p class="text-center">
+      Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+    </p>
+  </div>
+
+  <script>
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const error = document.getElementById('error');
+
+      if (!email || !password) {
+        error.textContent = 'Заполните все поля';
+        return;
+      }
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = 'index.html';
+        })
+        .catch(err => {
+          error.textContent = err.message;
+        });
+    }
+  </script>
+</body>
+</html>
