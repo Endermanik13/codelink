@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CodeLink</title>
 
-  <!-- Подключаем Firebase (просто и надёжно) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <!-- Твой конфиг Firebase -->
+  <!-- Твой конфиг -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
@@ -22,8 +22,6 @@
       appId: "1:965987995013:web:772c8889a527be574788ec",
       measurementId: "G-2CWM5T0CSP"
     };
-
-    // Инициализация Firebase
     firebase.initializeApp(firebaseConfig);
   </script>
 
@@ -35,11 +33,14 @@
     :root {
       --bg: #0d1117;
       --bg-secondary: #161b22;
+      --bg-hover: #21262d;
       --text: #c9d1d9;
       --text-muted: #8b949e;
       --border: #30363d;
       --accent: #58a6ff;
       --danger: #f85149;
+      --warning: #d29922;
+      --code-bg: #161b22;
     }
     body {
       background: var(--bg);
@@ -47,6 +48,7 @@
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       margin: 0;
       padding: 0;
+      line-height: 1.6;
     }
     header {
       display: flex;
@@ -93,27 +95,23 @@
       font-size: 14px;
       cursor: pointer;
     }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
     .container {
-      max-width: 768px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 24px 20px;
     }
+
+    /* Создание поста */
     .create-post {
       background: var(--bg-secondary);
       border-radius: 12px;
       border: 1px solid var(--border);
       padding: 16px;
       margin-bottom: 24px;
-    }
-    .post-creator {
-      display: flex;
-      gap: 12px;
-    }
-    .creator-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
     }
     .post-input {
       width: 100%;
@@ -124,11 +122,12 @@
       color: var(--text);
       resize: none;
       font-size: 14px;
+      margin-bottom: 12px;
     }
     .post-actions {
       display: flex;
       justify-content: space-between;
-      margin-top: 8px;
+      align-items: center;
     }
     .media-button {
       width: 36px;
@@ -148,16 +147,29 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .posts {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+
+    /* Предпросмотр изображения */
+    .image-preview {
+      margin: 10px 0;
+      max-height: 300px;
+      border-radius: 8px;
+      object-fit: contain;
+      display: none;
     }
+    .file-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 5px 0;
+      display: none;
+    }
+
+    /* Посты */
     .post {
       background: var(--bg-secondary);
       border-radius: 12px;
       border: 1px solid var(--border);
       overflow: hidden;
+      margin-bottom: 16px;
     }
     .post-header {
       padding: 16px;
@@ -181,6 +193,15 @@
     .post-text {
       margin-bottom: 12px;
       line-height: 1.6;
+    }
+    .post-code {
+      background: var(--code-bg);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+      white-space: pre-wrap;
+      font-size: 14px;
+      overflow-x: auto;
     }
     .post-image {
       width: 100%;
@@ -214,10 +235,65 @@
     .post-action.liked {
       color: var(--danger);
     }
-    .empty {
-      color: var(--text-muted);
-      text-align: center;
-      padding: 40px;
+
+    /* Комментарии */
+    .comments-section {
+      padding: 0 16px 16px 16px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+    .comment {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    .comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .comment-content {
+      flex: 1;
+    }
+    .comment-header {
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .comment-text {
+      font-size: 14px;
+    }
+
+    /* Коммент формы */
+    .comment-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .comment-input {
+      flex: 1;
+      padding: 8px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .comment-submit {
+      padding: 8px 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Удаление поста */
+    .post-delete {
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -226,7 +302,7 @@
     <div class="logo">C<span>ode</span>Link</div>
     <div id="auth-buttons">
       <a href="login.html" class="btn-outline">Войти</a>
-      <a href="register.html" class="btn-primary">Регистрация</a>
+      <a href="profile.html" class="btn-outline">Профиль</a>
     </div>
     <div class="user-menu" id="user-menu" style="display: none">
       <img src="" id="user-avatar" class="user-avatar" />
@@ -237,12 +313,17 @@
 
   <div class="container">
     <!-- Форма создания поста -->
-    <section class="create-post" id="create-post" style="display: none">
+    <section class="create-post">
       <div class="post-creator">
-        <img id="post-avatar" class="creator-avatar" />
+        <img id="post-avatar" class="user-avatar" />
         <div class="post-form">
-          <textarea class="post-input" placeholder="Что у вас нового?"></textarea>
+          <textarea class="post-input" placeholder="Что у вас нового? Поделитесь кодом, идеей или вопросом"></textarea>
+
+          <!-- Предпросмотр изображения -->
           <input type="file" id="post-image" accept="image/*" style="display: none" />
+          <div class="file-info" id="file-info"></div>
+          <img id="image-preview" class="image-preview" />
+
           <div class="post-actions">
             <button class="media-button" onclick="document.getElementById('post-image').click()">🖼️</button>
             <button class="post-button" onclick="publish()">Опубликовать</button>
@@ -256,14 +337,13 @@
   </div>
 
   <script>
-    // Запускаем иконки
     lucide.createIcons();
 
     // Проверка авторизации
     firebase.auth().onAuthStateChanged(user => {
       const authButtons = document.getElementById('auth-buttons');
       const userMenu = document.getElementById('user-menu');
-      const createPost = document.getElementById('create-post');
+      const createPost = document.querySelector('.create-post');
       const postAvatar = document.getElementById('post-avatar');
 
       if (user) {
@@ -288,6 +368,28 @@
       window.location.href = 'index.html';
     }
 
+    // Предпросмотр изображения
+    document.getElementById('post-image').onchange = function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('image-preview');
+      const fileInfo = document.getElementById('file-info');
+
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Файл слишком большой! Максимум 5 МБ.');
+          this.value = '';
+          preview.style.display = 'none';
+          fileInfo.style.display = 'none';
+          return;
+        }
+
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+        fileInfo.textContent = `Файл: ${file.name} (${(file.size / 1024).toFixed(1)} КБ)`;
+        fileInfo.style.display = 'block';
+      }
+    };
+
     // Публикация поста
     async function publish() {
       const input = document.querySelector('.post-input');
@@ -298,27 +400,120 @@
       const user = firebase.auth().currentUser;
       let imageUrl = null;
 
+      // Моментальное отображение
+      const tempId = 'temp_' + Date.now();
+      const tempPost = {
+        id: tempId,
+        uid: user.uid,
+        username: user.displayName,
+        avatar: user.photoURL,
+        content: content,
+        imageUrl: null,
+        likes: [],
+        timestamp: { toDate: () => new Date() },
+        temp: true
+      };
+      addPostToDOM(tempPost);
+      input.value = '';
+      document.getElementById('image-preview').style.display = 'none';
+      document.getElementById('file-info').style.display = 'none';
+      fileInput.value = '';
+
       if (fileInput.files[0]) {
         const file = fileInput.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Изображение слишком большое! Максимум 5 МБ.');
+          document.getElementById('posts').innerHTML = document.getElementById('posts').innerHTML.replace(`id="${tempId}"`, '');
+          return;
+        }
+
         const storageRef = firebase.storage().ref();
         const fileRef = storageRef.child(`posts/${user.uid}/${Date.now()}`);
-        await fileRef.put(file);
-        imageUrl = await fileRef.getDownloadURL();
+        const snapshot = await fileRef.put(file);
+        imageUrl = await snapshot.ref.getDownloadURL();
       }
 
-      await firebase.firestore().collection('posts').add({
+      const docRef = await firebase.firestore().collection('posts').add({
         uid: user.uid,
         username: user.displayName,
         avatar: user.photoURL,
         content: content,
         imageUrl: imageUrl,
         likes: [],
+        comments: [],
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      input.value = '';
-      fileInput.value = '';
-      loadPosts();
+      // Заменить временный пост на настоящий
+      document.getElementById(tempId).id = docRef.id;
+    }
+
+    // Добавление поста в DOM
+    function addPostToDOM(post) {
+      const isTemp = post.temp ? 'temp' : '';
+      const canDelete = firebase.auth().currentUser && firebase.auth().currentUser.uid === post.uid;
+
+      const commentsHtml = (post.comments || []).map(c => `
+        <div class="comment">
+          <img src="${c.avatar || 'https://placehold.co/32x32/58a6ff/ffffff?text=' + (c.username?.[0] || 'U')}" class="comment-avatar">
+          <div class="comment-content">
+            <div class="comment-header">${c.username}</div>
+            <div class="comment-text">${c.text}</div>
+          </div>
+        </div>
+      `).join('');
+
+      const postHtml = `
+        <article class="post" id="${post.id}">
+          <div class="post-header">
+            <img src="${post.avatar || 'https://placehold.co/40x40/58a6ff/ffffff?text=' + (post.username?.[0]?.toUpperCase() || 'U')}" class="post-user-avatar" />
+            <div class="post-user-info">
+              <div class="post-user-name">${post.username}</div>
+              <div class="post-user-meta">@${post.username?.toLowerCase() || 'user'} • ${formatTime(post.timestamp)}</div>
+            </div>
+            ${canDelete ? '<div class="post-delete" onclick="deletePost(\''+post.id+'\')">Удалить</div>' : ''}
+          </div>
+          <div class="post-content">
+            <div class="post-text">${formatCode(post.content)}</div>
+            ${post.imageUrl ? `<img src="${post.imageUrl}" class="post-image">` : ''}
+          </div>
+          <div class="post-footer">
+            <div class="post-actions">
+              <div class="post-action ${post.likes?.includes(firebase.auth().currentUser?.uid || '') ? 'liked' : ''}" onclick="toggleLike('${post.id}', ${post.likes?.includes(firebase.auth().currentUser?.uid || '')})">
+                <i data-lucide="heart"></i>
+                <span>${post.likes?.length || 0}</span>
+              </div>
+              <div class="post-action" onclick="toggleComments('${post.id}')">
+                <i data-lucide="message-circle"></i>
+                <span>${post.comments?.length || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Комментарии -->
+          <div class="comments-section" id="comments-${post.id}">
+            ${commentsHtml}
+            <div class="comment-form">
+              <input type="text" class="comment-input" placeholder="Написать комментарий..." id="comment-input-${post.id}">
+              <button class="comment-submit" onclick="addComment('${post.id}')">Отправить</button>
+            </div>
+          </div>
+        </article>
+      `;
+
+      const container = document.getElementById('posts');
+      if (post.temp) {
+        container.innerHTML = postHtml + container.innerHTML;
+      } else {
+        container.innerHTML = postHtml + container.innerHTML.replace(`id="${post.id}"`, '');
+      }
+      lucide.createIcons();
+    }
+
+    // Подсветка кода
+    function formatCode(text) {
+      return text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<div class="post-code">$2</div>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>');
     }
 
     // Загрузка постов
@@ -326,75 +521,21 @@
       const container = document.getElementById('posts');
       try {
         const snapshot = await firebase.firestore().collection('posts').orderBy('timestamp', 'desc').get();
-        
         if (snapshot.empty) {
-          container.innerHTML = '<p class="empty">Пока нет постов. Будьте первым!</p>';
+          container.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 20px;">Пока нет постов. Будьте первым!</p>';
           return;
         }
 
-        const posts = [];
-        const user = firebase.auth().currentUser;
-
         snapshot.forEach(doc => {
           const data = doc.data();
-          const isLiked = data.likes.includes(user?.uid || '');
-          const time = formatTime(data.timestamp);
-
-          posts.push(`
-            <article class="post">
-              <div class="post-header">
-                <img src="${data.avatar || 'https://placehold.co/40x40/58a6ff/ffffff?text=' + (data.username?.[0]?.toUpperCase() || 'U')}" 
-                     class="post-user-avatar" alt="${data.username}">
-                <div class="post-user-info">
-                  <div class="post-user-name">${data.username}</div>
-                  <div class="post-user-meta">@${data.username?.toLowerCase() || 'user'} • ${time}</div>
-                </div>
-              </div>
-              <div class="post-content">
-                <p class="post-text">${data.content}</p>
-                ${data.imageUrl ? `<img src="${data.imageUrl}" class="post-image">` : ''}
-              </div>
-              <div class="post-footer">
-                <div class="post-actions">
-                  <div class="post-action ${isLiked ? 'liked' : ''}" onclick="toggleLike('${doc.id}', ${isLiked})">
-                    <i data-lucide="heart"></i>
-                    <span>${data.likes.length}</span>
-                  </div>
-                  <div class="post-action">
-                    <i data-lucide="message-circle"></i>
-                    <span>0</span>
-                  </div>
-                  <div class="post-action">
-                    <i data-lucide="share-2"></i>
-                    <span>0</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          `);
+          addPostToDOM({ id: doc.id, ...data });
         });
-
-        container.innerHTML = posts.join('');
-        lucide.createIcons();
       } catch (err) {
-        container.innerHTML = `<p style="color: ${var('--danger')}">Ошибка: ${err.message}</p>`;
+        container.innerHTML = `<p style="color: var(--danger)">Ошибка: ${err.message}</p>`;
       }
     }
 
-    function formatTime(timestamp) {
-      if (!timestamp) return 'только что';
-      const date = timestamp.toDate();
-      const now = new Date();
-      const diffMs = now - date;
-      const diffSec = Math.floor(diffMs / 1000);
-      const diffMin = Math.floor(diffSec / 60);
-      const diffHour = Math.floor(diffMin / 60);
-      if (diffSec < 60) return 'только что';
-      if (diffMin < 60) return `${diffMin} мин`;
-      if (diffHour < 24) return `${diffHour} ч`;
-      return date.toLocaleDateString();
-    }
-
+    // Лайк (моментальный)
     window.toggleLike = async (postId, isLiked) => {
       const user = firebase.auth().currentUser;
       if (!user) return alert('Войдите, чтобы ставить лайки');
@@ -412,9 +553,67 @@
         likes.push(user.uid);
       }
 
+      // Моментальное обновление
+      const likeBtn = document.querySelector(`[onclick="toggleLike('${postId}', ${isLiked})"]`);
+      const likeSpan = likeBtn.querySelector('span');
+      likeSpan.textContent = likes.length;
+      likeBtn.classList.toggle('liked');
+
       await postRef.update({ likes });
-      loadPosts();
     };
+
+    // Комментарии
+    window.toggleComments = (postId) => {
+      const section = document.getElementById(`comments-${postId}`);
+      section.style.display = section.style.display === 'block' ? 'none' : 'block';
+    };
+
+    window.addComment = async (postId) => {
+      const input = document.getElementById(`comment-input-${postId}`);
+      const text = input.value.trim();
+      if (!text) return;
+
+      const user = firebase.auth().currentUser;
+      const comment = {
+        uid: user.uid,
+        username: user.displayName,
+        avatar: user.photoURL,
+        text: text,
+        timestamp: Date.now()
+      };
+
+      const postRef = firebase.firestore().collection('posts').doc(postId);
+      const post = await postRef.get();
+      const data = post.data();
+      data.comments.push(comment);
+
+      await postRef.update({ comments: data.comments });
+
+      input.value = '';
+      loadPosts(); // Перезагрузка для обновления
+    };
+
+    // Удаление поста
+    window.deletePost = async (postId) => {
+      if (!confirm('Удалить пост?')) return;
+      await firebase.firestore().collection('posts').doc(postId).delete();
+      document.getElementById(postId).remove();
+    };
+
+    // Время
+    function formatTime(timestamp) {
+      if (!timestamp) return 'только что';
+      const date = timestamp.toDate();
+      const now = new Date();
+      const diffMs = now - date;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      if (diffSec < 60) return 'только что';
+      if (diffMin < 60) return `${diffMin} мин`;
+      if (diffHour < 24) return `${diffHour} ч`;
+      return date.toLocaleDateString();
+    }
   </script>
 </body>
 </html>
