@@ -9,7 +9,27 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <!-- Подключаем Firebase (просто и надёжно) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+<!-- Твой конфиг Firebase -->
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
+    authDomain: "codelinked2347.firebaseapp.com",
+    projectId: "codelinked2347",
+    storageBucket: "codelinked2347.firebasestorage.app",
+    messagingSenderId: "965987995013",
+    appId: "1:965987995013:web:772c8889a527be574788ec",
+    measurementId: "G-2CWM5T0CSP"
+  };
+
+  // Инициализация Firebase
+  firebase.initializeApp(firebaseConfig);
+</script>
   <!-- Иконки -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <link rel="stylesheet" href="style.css" />
