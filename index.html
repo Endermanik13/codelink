@@ -4,73 +4,259 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CodeLink</title>
-  <!-- Firebase -->
+
+  <!-- Подключаем Firebase (просто и надёжно) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-  <!-- Подключаем Firebase (просто и надёжно) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-<!-- Твой конфиг Firebase -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
-    authDomain: "codelinked2347.firebaseapp.com",
-    projectId: "codelinked2347",
-    storageBucket: "codelinked2347.firebasestorage.app",
-    messagingSenderId: "965987995013",
-    appId: "1:965987995013:web:772c8889a527be574788ec",
-    measurementId: "G-2CWM5T0CSP"
-  };
+  <!-- Твой конфиг Firebase -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
+      authDomain: "codelinked2347.firebaseapp.com",
+      projectId: "codelinked2347",
+      storageBucket: "codelinked2347.firebasestorage.app",
+      messagingSenderId: "965987995013",
+      appId: "1:965987995013:web:772c8889a527be574788ec",
+      measurementId: "G-2CWM5T0CSP"
+    };
 
-  // Инициализация Firebase
-  firebase.initializeApp(firebaseConfig);
-</script>
+    // Инициализация Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
   <!-- Иконки -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- Стили -->
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-secondary: #161b22;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --danger: #f85149;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .logo {
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .logo span {
+      color: var(--accent);
+    }
+    .user-menu, #auth-buttons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .btn-outline {
+      padding: 8px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      padding: 8px 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 768px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    .create-post {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .post-creator {
+      display: flex;
+      gap: 12px;
+    }
+    .creator-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .post-input {
+      width: 100%;
+      padding: 12px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      resize: none;
+      font-size: 14px;
+    }
+    .post-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+    .media-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .post-button {
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .posts {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .post {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .post-header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .post-user-info {
+      flex: 1;
+    }
+    .post-user-name {
+      font-weight: 600;
+    }
+    .post-user-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .post-content {
+      padding: 0 16px 12px 16px;
+    }
+    .post-text {
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    .post-image {
+      width: 100%;
+      border-radius: 8px;
+      max-height: 500px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .post-footer {
+      padding: 0 16px 16px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+    .post-actions {
+      display: flex;
+      gap: 20px;
+    }
+    .post-action {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .post-action:hover {
+      color: var(--accent);
+    }
+    .post-action.liked {
+      color: var(--danger);
+    }
+    .empty {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 40px;
+    }
+  </style>
 </head>
 <body>
   <header>
     <div class="logo">C<span>ode</span>Link</div>
-    <div class="user-menu" id="user-menu" style="display: none">
-      <img src="" id="user-avatar" class="user-avatar" />
-      <span id="username"></span>
-      <button onclick="logout()" class="btn-ghost">Выйти</button>
-    </div>
     <div id="auth-buttons">
       <a href="login.html" class="btn-outline">Войти</a>
       <a href="register.html" class="btn-primary">Регистрация</a>
     </div>
+    <div class="user-menu" id="user-menu" style="display: none">
+      <img src="" id="user-avatar" class="user-avatar" />
+      <span id="username"></span>
+      <button onclick="logout()" class="btn-outline">Выйти</button>
+    </div>
   </header>
 
   <div class="container">
-    <main class="main-content">
-      <!-- Форма создания поста -->
-      <section class="create-post" id="create-post" style="display: none">
-        <div class="post-creator">
-          <img id="post-avatar" class="creator-avatar" />
-          <div class="post-form">
-            <textarea class="post-input" placeholder="Что у вас нового?"></textarea>
-            <input type="file" id="post-image" accept="image/*" style="display: none" />
-            <div class="post-actions">
-              <button class="media-button" onclick="document.getElementById('post-image').click()">🖼️</button>
-              <button class="post-button" onclick="publish()">Опубликовать</button>
-            </div>
+    <!-- Форма создания поста -->
+    <section class="create-post" id="create-post" style="display: none">
+      <div class="post-creator">
+        <img id="post-avatar" class="creator-avatar" />
+        <div class="post-form">
+          <textarea class="post-input" placeholder="Что у вас нового?"></textarea>
+          <input type="file" id="post-image" accept="image/*" style="display: none" />
+          <div class="post-actions">
+            <button class="media-button" onclick="document.getElementById('post-image').click()">🖼️</button>
+            <button class="post-button" onclick="publish()">Опубликовать</button>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Лента постов -->
-      <div class="posts" id="posts">Загрузка постов...</div>
-    </main>
+    <!-- Лента постов -->
+    <div class="posts" id="posts">Загрузка постов...</div>
   </div>
 
   <script>
+    // Запускаем иконки
     lucide.createIcons();
 
     // Проверка авторизации
@@ -89,7 +275,7 @@
           createPost.style.display = 'block';
           postAvatar.src = user.photoURL || `https://placehold.co/40x40/58a6ff/ffffff?text=${user.displayName?.[0]?.toUpperCase() || 'U'}`;
         }
-        loadPosts(); // Загружаем посты
+        loadPosts();
       } else {
         userMenu.style.display = 'none';
         authButtons.style.display = 'flex';
@@ -189,9 +375,9 @@
         });
 
         container.innerHTML = posts.join('');
-        lucide.createIcons(); // Перерисовываем иконки
+        lucide.createIcons();
       } catch (err) {
-        container.innerHTML = `<p class="error">Ошибка: ${err.message}</p>`;
+        container.innerHTML = `<p style="color: ${var('--danger')}">Ошибка: ${err.message}</p>`;
       }
     }
 
@@ -209,7 +395,6 @@
       return date.toLocaleDateString();
     }
 
-    // Лайк
     window.toggleLike = async (postId, isLiked) => {
       const user = firebase.auth().currentUser;
       if (!user) return alert('Войдите, чтобы ставить лайки');
