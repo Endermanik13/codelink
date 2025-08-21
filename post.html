@@ -269,40 +269,55 @@
             }
         }
 
-        async function addComment(postId) {
-            const user = firebase.auth().currentUser;
-            if (!user) {
-                alert('Войдите, чтобы оставить комментарий.');
-                window.location.href = 'login.html';
-                return;
-            }
+        // В post.html, внутри <script>
+async function addComment(postId) {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert('Войдите, чтобы оставить комментарий.');
+        window.location.href = 'login.html';
+        return;
+    }
 
-            const commentText = document.getElementById('comment-text').value.trim();
-            if (!commentText) {
-                alert('Введите текст комментария.');
-                return;
-            }
+    const commentText = document.getElementById('comment-text').value.trim();
+    if (!commentText) {
+        alert('Введите текст комментария.');
+        return;
+    }
 
-            try {
-                const comment = {
-                    uid: user.uid,
-                    username: user.displayName || user.email.split('@')[0],
-                    avatar: user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`,
-                    text: commentText,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                await firebase.firestore().collection('posts').doc(postId).update({
-                    comments: firebase.firestore.FieldValue.arrayUnion(comment)
-                });
-
-                document.getElementById('comment-text').value = '';
-                loadComments(postId); // Перезагрузка комментариев
-            } catch (error) {
-                console.error("Ошибка при добавлении комментария: ", error);
-                alert('Ошибка при добавлении комментария.');
-            }
+    try {
+        // Получаем текущий документ поста
+        const postDoc = await firebase.firestore().collection('posts').doc(postId).get();
+        if (!postDoc.exists) {
+            throw new Error("Пост не найден");
         }
+
+        const postData = postDoc.data();
+        let comments = postData.comments || [];
+
+        // Создаем новый комментарий
+        const newComment = {
+            uid: user.uid,
+            username: user.displayName || user.email.split('@')[0],
+            avatar: user.photoURL || `https://www.gravatar.com/avatar/${CryptoJS.MD5(user.email.toLowerCase().trim()).toString()}?d= identicon&s=40`, // Используем Gravatar
+            text: commentText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp() // Правильное использование serverTimestamp
+        };
+
+        // Добавляем новый комментарий в массив
+        comments.push(newComment);
+
+        // Обновляем документ поста с новым массивом комментариев
+        await firebase.firestore().collection('posts').doc(postId).update({
+            comments: comments
+        });
+
+        document.getElementById('comment-text').value = '';
+        loadComments(postId); // Перезагрузка комментариев
+    } catch (error) {
+        console.error("Ошибка при добавлении комментария: ", error);
+        alert('Ошибка при добавлении комментария: ' + error.message);
+    }
+}
 
         async function loadComments(postId) {
             try {
