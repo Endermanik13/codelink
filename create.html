@@ -1,62 +1,443 @@
+<!-- create.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Создать пост - CodeLink</title>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать пост - CodeLink</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Firebase Config (вставь свой) -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+            authDomain: "codelinked2347.firebaseapp.com",
+            projectId: "codelinked2347",
+            storageBucket: "codelinked2347.firebasestorage.app",
+            messagingSenderId: "965987995013",
+            appId: "1:965987995013:web:772c8889a527be574788ec"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </head>
 <body>
-  <div class="container">
-    <aside class="sidebar">...</aside>
-    <main class="main-content">
-      <header class="header">...</header>
-      <div class="create-post-container">
-        <form id="createForm">
-          <input type="text" id="title" placeholder="Заголовок" required>
-          <textarea id="content" placeholder="Содержание" required></textarea>
-          <input type="file" id="image" accept="image/*">
-          <input type="text" id="tags" placeholder="Теги (через запятую)">
-          <button type="submit" class="btn btn-primary">Опубликовать</button>
-        </form>
-      </div>
-    </main>
-  </div>
+    <div class="container">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span>Code</span><span>Link</span>
+                </div>
+            </div>
+            <button class="new-post-btn active">
+                <i class="fas fa-plus"></i>
+                Новый пост
+            </button>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Главная
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-fire"></i>
+                    Популярное
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    Недавние
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>CodeLink &copy; 2024</p>
+                <p>Сообщество для разработчиков</p>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-content">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Поиск по постам...">
+                    </div>
+                    <div id="auth-buttons">
+                        <a href="login.html" class="btn btn-outline">Войти</a>
+                        <a href="register.html" class="btn btn-primary" style="margin-left: 8px;">Регистрация</a>
+                    </div>
+                    <div id="user-menu" style="display: none; align-items: center; gap: 12px;">
+                        <img id="user-avatar-header" src="https://placehold.co/32x32/58a6ff/ffffff?text=U" class="user-avatar" alt="User Avatar">
+                        <span id="username-header">Пользователь</span>
+                        <a href="profile.html" class="btn btn-outline">Профиль</a>
+                        <button class="btn btn-outline" id="logout-btn">Выйти</button>
+                    </div>
+                </div>
+            </header>
+            <div class="create-post-container">
+                <!-- Page Header -->
+                <div class="create-post-header">
+                    <h1 class="create-post-title">Создать новый пост</h1>
+                    <p class="create-post-subtitle">Поделитесь своими знаниями, задайте вопрос или начните обсуждение</p>
+                </div>
+                <!-- Create Post Form -->
+                <form class="create-post-form" id="createPostForm">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <div class="form-group">
+                            <label for="postTitle" class="form-label">
+                                Заголовок <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="postTitle" 
+                                class="form-input" 
+                                placeholder="Введите понятный и информативный заголовок"
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="postContent" class="form-label">
+                                Содержание <span class="required">*</span>
+                            </label>
+                            <textarea 
+                                id="postContent" 
+                                class="form-textarea" 
+                                placeholder="Расскажите о своей проблеме, идеи или поделитесь знаниями.
+Поддерживается:
+- Простое форматирование (жирный, курсив)
+- Ссылки
+- Цитаты
+- Списки
+- Картинки и гифки (перетащите или загрузите)
+- Файлы (до 5MB)"
+                                required
+                            ></textarea>
+                        </div>
+                        <!-- File Upload -->
+                        <div class="form-group">
+                            <label class="form-label">Прикрепить файлы</label>
+                            <div class="file-upload" id="fileUpload">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="file-upload-text">
+                                    Перетащите файлы сюда или <span class="file-upload-highlight">выберите файлы</span>
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Поддерживаются изображения, GIF, архивы и документы (макс. 5MB)
+                                </div>
+                                <input type="file" id="fileInput" multiple style="display: none;">
+                            </div>
+                            <!-- Uploaded Files -->
+                            <div class="uploaded-files" id="uploadedFiles">
+                                <!-- Files will be added here dynamically -->
+                            </div>
+                        </div>
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="saveDraftBtn">
+                                <i class="fas fa-save"></i>
+                                Сохранить черновик
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                Опубликовать пост
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Right Column -->
+                    <div class="right-column">
+                        <!-- Tags -->
+                        <div class="card">
+                            <h3 class="card-title">Теги</h3>
+                            <div class="tags-container">
+                                <div class="tags-input" id="tagsInput">
+                                    <input 
+                                        type="text" 
+                                        id="postTags" 
+                                        class="tag-input" 
+                                        placeholder="Введите тег и нажмите Enter"
+                                    >
+                                </div>
+                                <div class="tags-help">
+                                    Добавьте до 5 тегов для лучшего поиска
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Guidelines -->
+                        <div class="card">
+                            <h3 class="card-title">Правила оформления</h3>
+                            <ul class="guidelines">
+                                <li class="guideline">
+                                    <div class="guideline-title">Четкий заголовок</div>
+                                    <div>Опишите суть проблемы или темы в заголовке</div>
+                                </li>
+                                <li class="guideline">
+                                    <div class="guideline-title">Подробное описание</div>
+                                    <div>Предоставьте достаточно контекста и кода для воспроизведения</div>
+                                </li>
+                                <li class="guideline">
+                                    <div class="guideline-title">Изображения и файлы</div>
+                                    <div>Прикрепляйте скриншоты, диаграммы и другие полезные материалы</div>
+                                </li>
+                                <li class="guideline">
+                                    <div class="guideline-title">Без спама</div>
+                                    <div>Не размещайте рекламу или оффтоп</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
 
-  <script>
-    document.getElementById('createForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const user = firebase.auth().currentUser;
-      if (!user) return alert('Войдите');
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Проверка авторизации
+            firebase.auth().onAuthStateChanged(user => {
+                if (!user) {
+                    window.location.href = 'login.html';
+                } else {
+                    document.getElementById('username-header').textContent = user.displayName || user.email.split('@')[0];
+                    document.getElementById('user-avatar-header').src = user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`;
+                    document.getElementById('auth-buttons').style.display = 'none';
+                    document.getElementById('user-menu').style.display = 'flex';
+                }
+            });
 
-      const title = document.getElementById('title').value;
-      const content = document.getElementById('content').value;
-      const tags = document.getElementById('tags').value.split(',').map(t => t.trim());
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                firebase.auth().signOut();
+            });
 
-      let imageUrl = null;
-      const file = document.getElementById('image').files[0];
-      if (file) {
-        const ref = firebase.storage().ref(`posts/${user.uid}/${Date.now()}`);
-        const snap = await ref.put(file);
-        imageUrl = await snap.ref.getDownloadURL();
-      }
+            // Логика тегов
+            let tags = [];
+            const postTagsInput = document.getElementById('postTags');
+            const tagsInputContainer = document.getElementById('tagsInput');
 
-      await firebase.firestore().collection('posts').add({
-        uid: user.uid,
-        username: user.displayName,
-        avatar: user.photoURL,
-        title,
-        content,
-        imageUrl,
-        tags,
-        likes: [],
-        comments: [],
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
+            postTagsInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const tagValue = this.value.trim().toLowerCase();
+                    if (tagValue && tags.length < 5 && !tags.includes(tagValue)) {
+                        tags.push(tagValue);
+                        this.value = '';
+                        updateTagsDisplay();
+                    }
+                }
+            });
 
-      alert('Пост опубликован!');
-      window.location.href = 'index.html';
-    };
-  </script>
+            function updateTagsDisplay() {
+                // Очистка тегов, кроме input
+                const tagElements = tagsInputContainer.querySelectorAll('.tag-item');
+                tagElements.forEach(tag => tag.remove());
+
+                // Добавление тегов
+                tags.forEach((tag, index) => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'tag-item';
+                    tagElement.innerHTML = `${tag} <i class="fas fa-times" data-index="${index}"></i>`;
+                    tagsInputContainer.insertBefore(tagElement, postTagsInput);
+                });
+
+                // Добавление обработчиков удаления
+                tagsInputContainer.querySelectorAll('.tag-item i').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const index = parseInt(this.getAttribute('data-index'));
+                        tags.splice(index, 1);
+                        updateTagsDisplay();
+                    });
+                });
+            }
+
+            // Логика загрузки файлов
+            const fileUploadArea = document.getElementById('fileUpload');
+            const fileInput = document.getElementById('fileInput');
+            const uploadedFilesContainer = document.getElementById('uploadedFiles');
+
+            fileUploadArea.addEventListener('click', function(e) {
+                if (e.target === fileUploadArea || e.target.closest('.file-upload-text') || e.target.closest('.file-upload-highlight')) {
+                    fileInput.click();
+                }
+            });
+
+            fileUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = 'var(--accent-blue)';
+                fileUploadArea.style.backgroundColor = 'rgba(47, 129, 247, 0.1)';
+            });
+
+            fileUploadArea.addEventListener('dragleave', function() {
+                fileUploadArea.style.borderColor = 'var(--border-color)';
+                fileUploadArea.style.backgroundColor = '';
+            });
+
+            fileUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = 'var(--border-color)';
+                fileUploadArea.style.backgroundColor = '';
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    handleFiles(this.files);
+                }
+            });
+
+            function handleFiles(files) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
+                        alert(`Файл ${file.name} слишком большой (макс. 5MB)`);
+                        continue;
+                    }
+                    createFilePreview(file);
+                }
+            }
+
+            function createFilePreview(file) {
+                const fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                let fileIcon = 'fa-file';
+                if (file.type.startsWith('image/')) {
+                    fileIcon = 'fa-file-image';
+                } else if (file.name.toLowerCase().endsWith('.gif')) {
+                    fileIcon = 'fa-file-image';
+                } else if (file.type === 'application/pdf') {
+                    fileIcon = 'fa-file-pdf';
+                } else if (file.type.includes('archive') || file.name.toLowerCase().endsWith('.zip') || file.name.toLowerCase().endsWith('.rar')) {
+                    fileIcon = 'fa-file-archive';
+                } else if (file.type.includes('document') || file.name.toLowerCase().endsWith('.doc') || file.name.toLowerCase().endsWith('.docx')) {
+                    fileIcon = 'fa-file-word';
+                }
+
+                const fileSize = window.formatFileSize(file.size);
+                const fileElement = document.createElement('div');
+                fileElement.className = 'uploaded-file';
+                fileElement.dataset.fileId = fileId;
+                fileElement.innerHTML = `
+                    <i class="fas ${fileIcon} file-icon"></i>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${fileSize}</div>
+                    </div>
+                    <div class="remove-file">
+                        <i class="fas fa-times"></i>
+                    </div>
+                `;
+                fileElement.querySelector('.remove-file').addEventListener('click', function() {
+                    fileElement.remove();
+                    // Здесь можно удалить файл из временного хранилища, если нужно
+                });
+                uploadedFilesContainer.appendChild(fileElement);
+
+                // Сохраняем файл в dataset для последующей загрузки
+                fileElement.dataset.fileObject = JSON.stringify({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size
+                });
+                fileElement.file = file; // Прямая ссылка на объект файла
+            }
+
+            // Сохранение черновика (заглушка)
+            document.getElementById('saveDraftBtn').addEventListener('click', function() {
+                alert('Функция сохранения черновиков будет реализована позже.');
+            });
+
+            // Отправка формы
+            document.getElementById('createPostForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    alert('Вы должны войти, чтобы создать пост.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const title = document.getElementById('postTitle').value.trim();
+                const content = document.getElementById('postContent').value.trim();
+
+                if (!title) {
+                    alert('Заголовок обязателен.');
+                    return;
+                }
+                if (!content) {
+                    alert('Содержание обязательно.');
+                    return;
+                }
+
+                try {
+                    // Подготовка данных поста
+                    const postData = {
+                        uid: user.uid,
+                        username: user.displayName || user.email.split('@')[0],
+                        avatar: user.photoURL || `https://placehold.co/40x40/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`,
+                        title: title,
+                        content: content,
+                        tags: tags,
+                        likes: [],
+                        comments: [],
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    // Загрузка файлов (если есть)
+                    const fileElements = uploadedFilesContainer.querySelectorAll('.uploaded-file');
+                    const imageUrls = [];
+                    const fileUrls = [];
+
+                    for (const fileElement of fileElements) {
+                        const file = fileElement.file;
+                        if (file) {
+                            const storageRef = firebase.storage().ref();
+                            const fileRef = storageRef.child(`posts/${user.uid}/${Date.now()}_${file.name}`);
+                            const snapshot = await fileRef.put(file);
+                            const downloadURL = await snapshot.ref.getDownloadURL();
+
+                            if (file.type.startsWith('image/')) {
+                                imageUrls.push(downloadURL);
+                            } else {
+                                fileUrls.push({
+                                    name: file.name,
+                                    url: downloadURL,
+                                    type: file.type
+                                });
+                            }
+                        }
+                    }
+
+                    postData.imageUrls = imageUrls;
+                    postData.fileUrls = fileUrls;
+
+                    // Сохранение поста в Firestore
+                    await firebase.firestore().collection('posts').add(postData);
+
+                    alert('Пост успешно опубликован!');
+                    document.getElementById('createPostForm').reset();
+                    tags = [];
+                    updateTagsDisplay();
+                    uploadedFilesContainer.innerHTML = '';
+                    window.location.href = 'index.html'; // Перенаправление на главную
+                } catch (error) {
+                    console.error("Ошибка при создании поста: ", error);
+                    alert('Ошибка при создании поста: ' + error.message);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
