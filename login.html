@@ -1,4 +1,3 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -10,10 +9,11 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <!-- Firebase Config (вставь свой) -->
+    <!-- Firebase Config -->
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+             // !!! ЗАМЕНИТЕ НА ВАШ КОНФИГ !!!
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
             authDomain: "codelinked2347.firebaseapp.com",
             projectId: "codelinked2347",
             storageBucket: "codelinked2347.firebasestorage.app",
@@ -22,18 +22,51 @@
         };
         firebase.initializeApp(firebaseConfig);
     </script>
+    <style>
+        /* Стили для формы восстановления пароля */
+        #forgotPasswordForm {
+            display: none;
+        }
+        #loginForm {
+            display: block;
+        }
+        .switch-form {
+            color: var(--accent-blue);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .switch-form:hover {
+            color: var(--accent-blue-hover);
+        }
+    </style>
 </head>
 <body>
     <div class="auth-container">
         <div class="auth-card">
             <h2>Вход в CodeLink</h2>
             <p>Добро пожаловать обратно!</p>
+            
+            <!-- Форма входа -->
             <form id="loginForm">
                 <input type="email" id="email" placeholder="Email" required>
                 <input type="password" id="password" placeholder="Пароль" required>
                 <div class="error" id="login-error"></div>
                 <button type="submit" class="btn btn-primary">Войти</button>
+                <p class="text-center">
+                    <span class="switch-form" id="showForgotPassword">Забыли пароль?</span>
+                </p>
             </form>
+
+            <!-- Форма восстановления пароля -->
+            <form id="forgotPasswordForm">
+                <input type="email" id="resetEmail" placeholder="Email для восстановления" required>
+                <div class="error" id="reset-error"></div>
+                <button type="submit" class="btn btn-primary">Отправить ссылку</button>
+                <p class="text-center">
+                    <span class="switch-form" id="showLogin">Вспомнили пароль? Войти</span>
+                </p>
+            </form>
+
             <p class="text-center">
                 Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
             </p>
@@ -41,18 +74,57 @@
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('login-error');
+        document.addEventListener('DOMContentLoaded', function () {
+            const loginForm = document.getElementById('loginForm');
+            const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+            const showForgotPassword = document.getElementById('showForgotPassword');
+            const showLogin = document.getElementById('showLogin');
+            const loginError = document.getElementById('login-error');
+            const resetError = document.getElementById('reset-error');
 
-            try {
-                await firebase.auth().signInWithEmailAndPassword(email, password);
-                window.location.href = 'index.html'; // Перенаправление на главную
-            } catch (error) {
-                errorDiv.textContent = error.message;
-            }
+            // Переключение между формами
+            showForgotPassword.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                forgotPasswordForm.style.display = 'block';
+                loginError.textContent = '';
+            });
+
+            showLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                forgotPasswordForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                resetError.textContent = '';
+            });
+
+            // Обработчик входа
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                try {
+                    await firebase.auth().signInWithEmailAndPassword(email, password);
+                    window.location.href = 'index.html'; // Перенаправление на главную
+                } catch (error) {
+                    loginError.textContent = error.message;
+                }
+            });
+
+            // Обработчик восстановления пароля
+            forgotPasswordForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('resetEmail').value;
+
+                try {
+                    await firebase.auth().sendPasswordResetEmail(email);
+                    alert('Ссылка для восстановления пароля отправлена на ваш email.');
+                    // Переключаемся обратно на форму входа
+                    showLogin.click();
+                } catch (error) {
+                    resetError.textContent = error.message;
+                }
+            });
         });
     </script>
 </body>
