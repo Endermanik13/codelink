@@ -28,14 +28,58 @@
     padding: 0;
     box-sizing: border-box;
 }
-/* В style.css */
+/* ... (остальные стили) ... */
+
+/* Стили для аватара в шапке */
 .user-avatar {
     width: 32px;
     height: 32px;
-    /* Добавьте эту строку, если её нет */
     border-radius: 50%; /* Скругление углов до круга */
     object-fit: cover;
 }
+
+/* Стили для аватара в профиле */
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; /* Скругление углов до круга */
+    object-fit: cover;
+}
+
+/* Стили для аватара комментатора */
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%; /* Скругление углов до круга */
+    object-fit: cover;
+    margin-right: 8px;
+}
+
+/* Стили для аватара автора поста */
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Скругление углов до круга */
+    object-fit: cover;
+    margin-right: 12px;
+}
+
+/* Стили для кнопки удаления поста */
+.post-delete-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--danger, #f85149);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+.post-delete-btn:hover {
+    background-color: rgba(248, 81, 73, 0.1);
+}
+
+/* ... (остальные стили) ... */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
     background-color: var(--bg-primary);
