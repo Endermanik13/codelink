@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -11,13 +10,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <!-- Lucide Icons -->
+    <!-- Lucide Icons (если используете) -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <!-- Firebase Config (вставь свой) -->
+    <!-- CryptoJS для Gravatar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Firebase Config -->
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+            // !!! ЗАМЕНИТЕ НА ВАШ КОНФИГ !!!
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
             authDomain: "codelinked2347.firebaseapp.com",
             projectId: "codelinked2347",
             storageBucket: "codelinked2347.firebasestorage.app",
@@ -82,7 +83,8 @@
                         <a href="register.html" class="btn btn-primary" style="margin-left: 8px;">Регистрация</a>
                     </div>
                     <div id="user-menu" style="display: none; align-items: center; gap: 12px;">
-                        <img id="user-avatar-header" src="https://placehold.co/32x32/58a6ff/ffffff?text=U" class="user-avatar" alt="User Avatar">
+                        <!-- Используем Gravatar по умолчанию -->
+                        <img id="user-avatar-header" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" class="user-avatar" alt="User Avatar">
                         <span id="username-header">Пользователь</span>
                         <a href="profile.html" class="btn btn-outline">Профиль</a>
                         <button class="btn btn-outline" id="logout-btn">Выйти</button>
@@ -112,8 +114,15 @@
                 if (user) {
                     authButtons.style.display = 'none';
                     userMenu.style.display = 'flex';
+                    
+                    // Установка имени пользователя
                     usernameHeader.textContent = user.displayName || user.email.split('@')[0];
-                    userAvatarHeader.src = user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`;
+                    
+                    // Установка аватара (Gravatar по умолчанию)
+                    const emailHash = CryptoJS.MD5(user.email.toLowerCase().trim()).toString();
+                    const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon&s=32`;
+                    const avatarUrl = user.photoURL || gravatarUrl;
+                    userAvatarHeader.src = avatarUrl;
                     
                     loadPosts(); // Загрузка постов после входа
                 } else {
@@ -151,10 +160,15 @@
                         const excerpt = data.content.length > 200 ? data.content.substring(0, 200) + '...' : data.content;
                         const tagsHtml = (data.tags || []).map(tag => `<a href="#" class="tag">${tag}</a>`).join(' ');
 
+                        // Аватар автора поста (Gravatar по умолчанию)
+                        const authorEmailHash = data.authorEmail ? CryptoJS.MD5(data.authorEmail.toLowerCase().trim()).toString() : '00000000000000000000000000000000';
+                        const authorGravatarUrl = `https://www.gravatar.com/avatar/${authorEmailHash}?d=identicon&s=40`;
+                        const authorAvatarUrl = data.avatar || authorGravatarUrl;
+
                         postsHtml += `
                         <article class="post-card">
                             <div class="post-header">
-                                <img src="${data.avatar || `https://placehold.co/40x40/58a6ff/ffffff?text=${(data.username || 'U')[0].toUpperCase()}`}" 
+                                <img src="${authorAvatarUrl}" 
                                      alt="${data.username}" class="post-avatar">
                                 <div class="post-user-info">
                                     <div class="post-username">${data.username || 'Аноним'}</div>
