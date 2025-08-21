@@ -1,137 +1,59 @@
+<!-- login.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Вход | CodeLink</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <!-- Подключаем Firebase (просто и надёжно) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-
-<!-- Твой конфиг Firebase -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
-    authDomain: "codelinked2347.firebaseapp.com",
-    projectId: "codelinked2347",
-    storageBucket: "codelinked2347.firebasestorage.app",
-    messagingSenderId: "965987995013",
-    appId: "1:965987995013:web:772c8889a527be574788ec",
-    measurementId: "G-2CWM5T0CSP"
-  };
-
-  // Инициализация Firebase
-  firebase.initializeApp(firebaseConfig);
-</script>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --bg-card: #161b22;
-      --text: #c9d1d9;
-      --text-muted: #8b949e;
-      --border: #30363d;
-      --accent: #58a6ff;
-      --danger: #f85149;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      padding: 40px;
-      margin: 0;
-    }
-    .form-container {
-      max-width: 440px;
-      margin: 0 auto;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 32px;
-    }
-    h2 {
-      margin: 0 0 16px 0;
-      font-size: 24px;
-    }
-    p {
-      color: var(--text-muted);
-      font-size: 14px;
-      margin: 0 0 24px 0;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: #0d1117;
-      color: var(--text);
-      font-size: 14px;
-    }
-    .btn {
-      width: 100%;
-      padding: 12px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .error {
-      color: var(--danger);
-      font-size: 14px;
-      margin: 10px 0;
-      min-height: 20px;
-    }
-    .text-center {
-      text-align: center;
-      color: var(--text-muted);
-      margin-top: 20px;
-      font-size: 14px;
-    }
-    a {
-      color: var(--accent);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - CodeLink</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Config (вставь свой) -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+            authDomain: "codelinked2347.firebaseapp.com",
+            projectId: "codelinked2347",
+            storageBucket: "codelinked2347.firebasestorage.app",
+            messagingSenderId: "965987995013",
+            appId: "1:965987995013:web:772c8889a527be574788ec"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </head>
 <body>
-  <div class="form-container">
-    <h2>Войти в CodeLink</h2>
-    <p>Добро пожаловать обратно</p>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Вход в CodeLink</h2>
+            <p>Добро пожаловать обратно!</p>
+            <form id="loginForm">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Пароль" required>
+                <div class="error" id="login-error"></div>
+                <button type="submit" class="btn btn-primary">Войти</button>
+            </form>
+            <p class="text-center">
+                Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+            </p>
+        </div>
+    </div>
 
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Пароль" />
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
 
-    <div class="error" id="error"></div>
-    <button class="btn" onclick="login()">Войти</button>
-
-    <p class="text-center">
-      Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
-    </p>
-  </div>
-
-  <script>
-    function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const error = document.getElementById('error');
-
-      if (!email || !password) {
-        error.textContent = 'Заполните все поля';
-        return;
-      }
-
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = 'index.html';
-        })
-        .catch(err => {
-          error.textContent = err.message;
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                window.location.href = 'index.html'; // Перенаправление на главную
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
         });
-    }
-  </script>
+    </script>
 </body>
 </html>
