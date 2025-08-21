@@ -1,96 +1,194 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>CodeLink</title>
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-  <!-- Твой конфиг -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
-      authDomain: "codelinked2347.firebaseapp.com",
-      projectId: "codelinked2347",
-      storageBucket: "codelinked2347.firebasestorage.app",
-      messagingSenderId: "965987995013",
-      appId: "1:965987995013:web:772c8889a527be574788ec"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
-  <!-- Иконки -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  <!-- Стили -->
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeLink - Сообщество для разработчиков</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Firebase Config (вставь свой) -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+            authDomain: "codelinked2347.firebaseapp.com",
+            projectId: "codelinked2347",
+            storageBucket: "codelinked2347.firebasestorage.app",
+            messagingSenderId: "965987995013",
+            appId: "1:965987995013:web:772c8889a527be574788ec"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </head>
 <body>
-  <div class="container">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="logo">Code<span>Link</span></div>
-      </div>
-      <button class="new-post-btn" onclick="window.location.href='create.html'">
-        <i data-lucide="plus"></i> Новый пост
-      </button>
-      <nav class="nav-menu">
-        <a href="#" class="nav-item active"><i data-lucide="home"></i> Главная</a>
-        <a href="#" class="nav-item"><i data-lucide="fire"></i> Популярное</a>
-      </nav>
-    </aside>
-
-    <main class="main-content">
-      <header class="header">
-        <div class="header-content">
-          <div class="search-container">
-            <i data-lucide="search" class="search-icon"></i>
-            <input type="text" class="search-input" placeholder="Поиск...">
-          </div>
-          <div id="user-menu"></div>
-        </div>
-      </header>
-
-      <div class="posts" id="posts">Загрузка...</div>
-    </main>
-  </div>
-
-  <script src="script.js"></script>
-  <script>
-    async function loadPosts() {
-      const container = document.getElementById('posts');
-      try {
-        const snapshot = await firebase.firestore().collection('posts').orderBy('timestamp', 'desc').get();
-        container.innerHTML = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          container.innerHTML += `
-            <article style="padding: 24px; border-bottom: 1px solid var(--border-color);">
-              <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                <img src="${data.avatar}" width="40" height="40" style="border-radius: 50%;">
-                <div>
-                  <div><strong>${data.username}</strong></div>
-                  <div style="color: var(--text-secondary); font-size: 14px;">@${data.username.toLowerCase()} • 2 ч назад</div>
+    <div class="container">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span>Code</span><span>Link</span>
                 </div>
-              </div>
-              <h2><a href="post.html?id=${doc.id}" style="color: var(--text-primary);">${data.title}</a></h2>
-              <p>${data.content.substring(0, 150)}...</p>
-              <div style="display: flex; gap: 8px; margin: 12px 0;">
-                <span class="tag">${data.tags?.[0] || 'javascript'}</span>
-              </div>
-              <div style="color: var(--text-secondary); font-size: 14px;">
-                <i data-lucide="heart"></i> ${data.likes?.length || 0} •
-                <i data-lucide="message-circle"></i> ${data.comments?.length || 0}
-              </div>
-            </article>
-          `;
+            </div>
+            <button class="new-post-btn" onclick="window.location.href='create.html'">
+                <i class="fas fa-plus"></i>
+                Новый пост
+            </button>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    Главная
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-fire"></i>
+                    Популярное
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    Недавние
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>CodeLink &copy; 2024</p>
+                <p>Сообщество для разработчиков</p>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-content">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Поиск по постам...">
+                    </div>
+                    <div id="auth-buttons">
+                        <button class="new-post-btn" onclick="window.location.href='create.html'">
+                            <i class="fas fa-plus"></i>
+                            Новый пост
+                        </button>
+                        <a href="login.html" class="btn btn-outline" style="margin-left: 12px;">Войти</a>
+                        <a href="register.html" class="btn btn-primary" style="margin-left: 8px;">Регистрация</a>
+                    </div>
+                    <div id="user-menu" style="display: none; align-items: center; gap: 12px;">
+                        <img id="user-avatar-header" src="https://placehold.co/32x32/58a6ff/ffffff?text=U" class="user-avatar" alt="User Avatar">
+                        <span id="username-header">Пользователь</span>
+                        <a href="profile.html" class="btn btn-outline">Профиль</a>
+                        <button class="btn btn-outline" id="logout-btn">Выйти</button>
+                    </div>
+                </div>
+            </header>
+            <div class="posts-feed" id="posts-feed">
+                <!-- Посты будут загружаться сюда -->
+                <div class="empty-feed">Загрузка постов...</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Проверка авторизации и загрузка постов
+        document.addEventListener('DOMContentLoaded', function () {
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            const usernameHeader = document.getElementById('username-header');
+            const userAvatarHeader = document.getElementById('user-avatar-header');
+            const logoutBtn = document.getElementById('logout-btn');
+            const postsFeed = document.getElementById('posts-feed');
+
+            // Проверка состояния аутентификации
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    authButtons.style.display = 'none';
+                    userMenu.style.display = 'flex';
+                    usernameHeader.textContent = user.displayName || user.email.split('@')[0];
+                    userAvatarHeader.src = user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`;
+                    
+                    loadPosts(); // Загрузка постов после входа
+                } else {
+                    authButtons.style.display = 'flex';
+                    userMenu.style.display = 'none';
+                    postsFeed.innerHTML = '<div class="empty-feed">Войдите, чтобы видеть посты.</div>';
+                }
+            });
+
+            // Выход
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    firebase.auth().signOut();
+                });
+            }
+
+            // Загрузка постов
+            async function loadPosts() {
+                try {
+                    const querySnapshot = await firebase.firestore().collection('posts')
+                        .orderBy('timestamp', 'desc')
+                        .limit(20)
+                        .get();
+
+                    if (querySnapshot.empty) {
+                        postsFeed.innerHTML = '<div class="empty-feed">Пока нет постов. Будьте первым!</div>';
+                        return;
+                    }
+
+                    let postsHtml = '';
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const postId = doc.id;
+                        const timeAgo = window.formatTimeAgo(data.timestamp);
+                        const excerpt = data.content.length > 200 ? data.content.substring(0, 200) + '...' : data.content;
+                        const tagsHtml = (data.tags || []).map(tag => `<a href="#" class="tag">${tag}</a>`).join(' ');
+
+                        postsHtml += `
+                        <article class="post-card">
+                            <div class="post-header">
+                                <img src="${data.avatar || `https://placehold.co/40x40/58a6ff/ffffff?text=${(data.username || 'U')[0].toUpperCase()}`}" 
+                                     alt="${data.username}" class="post-avatar">
+                                <div class="post-user-info">
+                                    <div class="post-username">${data.username || 'Аноним'}</div>
+                                    <div class="post-meta">${timeAgo}</div>
+                                </div>
+                            </div>
+                            <h2 class="post-title"><a href="post.html?id=${postId}">${data.title || 'Без заголовка'}</a></h2>
+                            <div class="post-excerpt">${excerpt}</div>
+                            <div class="post-footer">
+                                <div class="post-tags">
+                                    ${tagsHtml}
+                                </div>
+                                <div class="post-stats">
+                                    <div class="post-stat">
+                                        <i class="fas fa-heart"></i>
+                                        <span>${data.likes ? data.likes.length : 0}</span>
+                                    </div>
+                                    <div class="post-stat">
+                                        <i class="fas fa-comment"></i>
+                                        <span>${data.comments ? data.comments.length : 0}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                        `;
+                    });
+
+                    postsFeed.innerHTML = postsHtml;
+                } catch (error) {
+                    console.error("Ошибка загрузки постов: ", error);
+                    postsFeed.innerHTML = '<div class="empty-feed">Ошибка загрузки постов.</div>';
+                }
+            }
         });
-        lucide.createIcons();
-      } catch (err) {
-        container.innerHTML = 'Ошибка загрузки';
-      }
-    }
-    loadPosts();
-  </script>
+    </script>
 </body>
 </html>
