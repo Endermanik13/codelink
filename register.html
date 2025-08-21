@@ -1,4 +1,3 @@
-<!-- register.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -10,11 +9,11 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <!-- Firebase Config (вставь свой) -->
+    <!-- Firebase Config -->
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+             // !!! ЗАМЕНИТЕ НА ВАШ КОНФИГ !!!
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
             authDomain: "codelinked2347.firebaseapp.com",
             projectId: "codelinked2347",
             storageBucket: "codelinked2347.firebasestorage.app",
@@ -33,8 +32,6 @@
                 <input type="text" id="username" placeholder="Имя пользователя" required>
                 <input type="email" id="email" placeholder="Email" required>
                 <input type="password" id="password" placeholder="Пароль" required>
-                <label>Аватар (необязательно)</label>
-                <input type="file" id="avatar" accept="image/*">
                 <div class="error" id="register-error"></div>
                 <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
             </form>
@@ -50,40 +47,21 @@
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const avatarFile = document.getElementById('avatar').files[0];
             const errorDiv = document.getElementById('register-error');
 
             try {
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
-                let photoURL = `https://placehold.co/40x40/58a6ff/ffffff?text=${username[0].toUpperCase()}`;
-
-                // Загрузка аватара, если выбран
-                if (avatarFile) {
-                    if (avatarFile.size > 5 * 1024 * 1024) { // 5MB
-                        throw new Error('Аватар слишком большой (макс. 5MB)');
-                    }
-                    const storageRef = firebase.storage().ref();
-                    const avatarRef = storageRef.child(`avatars/${user.uid}`);
-                    const snapshot = await avatarRef.put(avatarFile);
-                    photoURL = await snapshot.ref.getDownloadURL();
-                }
-
                 // Обновление профиля пользователя
                 await user.updateProfile({
-                    displayName: username,
-                    photoURL: photoURL
+                    displayName: username
+                    // photoURL не устанавливаем, используем Gravatar
                 });
 
-                // Создание документа пользователя в Firestore (опционально)
-                // await firebase.firestore().collection('users').doc(user.uid).set({
-                //     uid: user.uid,
-                //     username: username,
-                //     email: email,
-                //     photoURL: photoURL,
-                //     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                // });
+                // Отправка email для верификации (опционально, можно включить позже)
+                // await user.sendEmailVerification();
+                // alert('Регистрация успешна! Проверьте ваш email для подтверждения.');
 
                 alert('Регистрация успешна!');
                 window.location.href = 'index.html'; // Перенаправление на главную
