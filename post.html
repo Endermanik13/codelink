@@ -1,4 +1,3 @@
-<!-- post.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -13,10 +12,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <!-- Firebase Config (вставь свой) -->
+    <!-- CryptoJS для Gravatar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Firebase Config -->
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+             // !!! ЗАМЕНИТЕ НА ВАШ КОНФИГ !!!
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
             authDomain: "codelinked2347.firebaseapp.com",
             projectId: "codelinked2347",
             storageBucket: "codelinked2347.firebasestorage.app",
@@ -81,7 +83,7 @@
                         <a href="register.html" class="btn btn-primary" style="margin-left: 8px;">Регистрация</a>
                     </div>
                     <div id="user-menu" style="display: none; align-items: center; gap: 12px;">
-                        <img id="user-avatar-header" src="https://placehold.co/32x32/58a6ff/ffffff?text=U" class="user-avatar" alt="User Avatar">
+                        <img id="user-avatar-header" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" class="user-avatar" alt="User Avatar">
                         <span id="username-header">Пользователь</span>
                         <a href="profile.html" class="btn btn-outline">Профиль</a>
                         <button class="btn btn-outline" id="logout-btn">Выйти</button>
@@ -101,8 +103,11 @@
             // Проверка авторизации
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
+                    // Установка данных в шапке
+                    const emailHashHeader = CryptoJS.MD5(user.email.toLowerCase().trim()).toString();
+                    const gravatarUrlHeader = `https://www.gravatar.com/avatar/${emailHashHeader}?d=identicon&s=32`;
+                    document.getElementById('user-avatar-header').src = gravatarUrlHeader;
                     document.getElementById('username-header').textContent = user.displayName || user.email.split('@')[0];
-                    document.getElementById('user-avatar-header').src = user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`;
                     document.getElementById('auth-buttons').style.display = 'none';
                     document.getElementById('user-menu').style.display = 'flex';
                 } else {
@@ -157,6 +162,11 @@
                     });
                     filesHtml += '</ul></div>';
                 }
+
+                // Аватар автора поста (Gravatar по умолчанию)
+                const authorEmailHash = data.authorEmail ? CryptoJS.MD5(data.authorEmail.toLowerCase().trim()).toString() : '00000000000000000000000000000000';
+                const authorGravatarUrl = `https://www.gravatar.com/avatar/${authorEmailHash}?d=identicon&s=40`;
+                const authorAvatarUrl = data.avatar || authorGravatarUrl;
 
                 container.innerHTML = `
                 <div class="article-header">
@@ -269,55 +279,56 @@
             }
         }
 
-        // В post.html, внутри <script>
-async function addComment(postId) {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        alert('Войдите, чтобы оставить комментарий.');
-        window.location.href = 'login.html';
-        return;
-    }
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ КОММЕНТАРИЯ
+        async function addComment(postId) {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Войдите, чтобы оставить комментарий.');
+                window.location.href = 'login.html';
+                return;
+            }
 
-    const commentText = document.getElementById('comment-text').value.trim();
-    if (!commentText) {
-        alert('Введите текст комментария.');
-        return;
-    }
+            const commentText = document.getElementById('comment-text').value.trim();
+            if (!commentText) {
+                alert('Введите текст комментария.');
+                return;
+            }
 
-    try {
-        // Получаем текущий документ поста
-        const postDoc = await firebase.firestore().collection('posts').doc(postId).get();
-        if (!postDoc.exists) {
-            throw new Error("Пост не найден");
+            try {
+                // Получаем текущий документ поста
+                const postDoc = await firebase.firestore().collection('posts').doc(postId).get();
+                if (!postDoc.exists) {
+                    throw new Error("Пост не найден");
+                }
+
+                const postData = postDoc.data();
+                let comments = postData.comments || [];
+
+                // Создаем новый комментарий
+                const newComment = {
+                    uid: user.uid,
+                    username: user.displayName || user.email.split('@')[0],
+                    // Используем Gravatar для аватара комментатора
+                    avatar: `https://www.gravatar.com/avatar/${CryptoJS.MD5(user.email.toLowerCase().trim()).toString()}?d=identicon&s=32`,
+                    text: commentText,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Правильное использование serverTimestamp
+                };
+
+                // Добавляем новый комментарий в локальный массив
+                comments.push(newComment);
+
+                // Обновляем документ поста с новым массивом комментариев
+                await firebase.firestore().collection('posts').doc(postId).update({
+                    comments: comments // Перезаписываем весь массив
+                });
+
+                document.getElementById('comment-text').value = '';
+                loadComments(postId); // Перезагрузка комментариев
+            } catch (error) {
+                console.error("Ошибка при добавлении комментария: ", error);
+                alert('Ошибка при добавлении комментария: ' + error.message);
+            }
         }
-
-        const postData = postDoc.data();
-        let comments = postData.comments || [];
-
-        // Создаем новый комментарий
-        const newComment = {
-            uid: user.uid,
-            username: user.displayName || user.email.split('@')[0],
-            avatar: user.photoURL || `https://www.gravatar.com/avatar/${CryptoJS.MD5(user.email.toLowerCase().trim()).toString()}?d= identicon&s=40`, // Используем Gravatar
-            text: commentText,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp() // Правильное использование serverTimestamp
-        };
-
-        // Добавляем новый комментарий в массив
-        comments.push(newComment);
-
-        // Обновляем документ поста с новым массивом комментариев
-        await firebase.firestore().collection('posts').doc(postId).update({
-            comments: comments
-        });
-
-        document.getElementById('comment-text').value = '';
-        loadComments(postId); // Перезагрузка комментариев
-    } catch (error) {
-        console.error("Ошибка при добавлении комментария: ", error);
-        alert('Ошибка при добавлении комментария: ' + error.message);
-    }
-}
 
         async function loadComments(postId) {
             try {
@@ -346,10 +357,11 @@ async function addComment(postId) {
                 let commentsHtml = '';
                 comments.forEach(comment => {
                     const timeAgo = window.formatTimeAgo(comment.timestamp);
+                    // Аватар комментатора уже установлен через Gravatar в addComment
                     commentsHtml += `
                     <div class="comment">
                         <div class="comment-header">
-                            <img src="${comment.avatar || `https://placehold.co/32x32/58a6ff/ffffff?text=${(comment.username || 'U')[0].toUpperCase()}`}" 
+                            <img src="${comment.avatar || `https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=32`}" 
                                  alt="${comment.username}" class="comment-avatar">
                             <span class="comment-author">${comment.username || 'Аноним'}</span>
                             <span class="comment-timestamp">${timeAgo}</span>
