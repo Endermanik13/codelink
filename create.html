@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Создать пост - CodeLink</title>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">...</aside>
+    <main class="main-content">
+      <header class="header">...</header>
+      <div class="create-post-container">
+        <form id="createForm">
+          <input type="text" id="title" placeholder="Заголовок" required>
+          <textarea id="content" placeholder="Содержание" required></textarea>
+          <input type="file" id="image" accept="image/*">
+          <input type="text" id="tags" placeholder="Теги (через запятую)">
+          <button type="submit" class="btn btn-primary">Опубликовать</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('createForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const user = firebase.auth().currentUser;
+      if (!user) return alert('Войдите');
+
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+      const tags = document.getElementById('tags').value.split(',').map(t => t.trim());
+
+      let imageUrl = null;
+      const file = document.getElementById('image').files[0];
+      if (file) {
+        const ref = firebase.storage().ref(`posts/${user.uid}/${Date.now()}`);
+        const snap = await ref.put(file);
+        imageUrl = await snap.ref.getDownloadURL();
+      }
+
+      await firebase.firestore().collection('posts').add({
+        uid: user.uid,
+        username: user.displayName,
+        avatar: user.photoURL,
+        title,
+        content,
+        imageUrl,
+        tags,
+        likes: [],
+        comments: [],
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert('Пост опубликован!');
+      window.location.href = 'index.html';
+    };
+  </script>
+</body>
+</html>
