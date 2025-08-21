@@ -1,0 +1,372 @@
+<!-- post.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="post-title-placeholder">Загрузка... - CodeLink</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Firebase Config (вставь свой) -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+            authDomain: "codelinked2347.firebaseapp.com",
+            projectId: "codelinked2347",
+            storageBucket: "codelinked2347.firebasestorage.app",
+            messagingSenderId: "965987995013",
+            appId: "1:965987995013:web:772c8889a527be574788ec"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span>Code</span><span>Link</span>
+                </div>
+            </div>
+            <button class="new-post-btn" onclick="window.location.href='create.html'">
+                <i class="fas fa-plus"></i>
+                Новый пост
+            </button>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Главная
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-fire"></i>
+                    Популярное
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    Недавние
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>CodeLink &copy; 2024</p>
+                <p>Сообщество для разработчиков</p>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-content">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Поиск по постам...">
+                    </div>
+                    <div id="auth-buttons">
+                        <button class="new-post-btn" onclick="window.location.href='create.html'">
+                            <i class="fas fa-plus"></i>
+                            Новый пост
+                        </button>
+                        <a href="login.html" class="btn btn-outline" style="margin-left: 12px;">Войти</a>
+                        <a href="register.html" class="btn btn-primary" style="margin-left: 8px;">Регистрация</a>
+                    </div>
+                    <div id="user-menu" style="display: none; align-items: center; gap: 12px;">
+                        <img id="user-avatar-header" src="https://placehold.co/32x32/58a6ff/ffffff?text=U" class="user-avatar" alt="User Avatar">
+                        <span id="username-header">Пользователь</span>
+                        <a href="profile.html" class="btn btn-outline">Профиль</a>
+                        <button class="btn btn-outline" id="logout-btn">Выйти</button>
+                    </div>
+                </div>
+            </header>
+            <div class="article-container" id="article-container">
+                <!-- Article content will be loaded here -->
+                <div class="empty-feed">Загрузка поста...</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Проверка авторизации
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    document.getElementById('username-header').textContent = user.displayName || user.email.split('@')[0];
+                    document.getElementById('user-avatar-header').src = user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`;
+                    document.getElementById('auth-buttons').style.display = 'none';
+                    document.getElementById('user-menu').style.display = 'flex';
+                } else {
+                    document.getElementById('auth-buttons').style.display = 'flex';
+                    document.getElementById('user-menu').style.display = 'none';
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                firebase.auth().signOut();
+            });
+
+            // Получение ID поста из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('id');
+
+            if (!postId) {
+                document.getElementById('article-container').innerHTML = '<div class="empty-feed">Пост не найден.</div>';
+                return;
+            }
+
+            // Загрузка поста
+            loadPost(postId);
+        });
+
+        async function loadPost(postId) {
+            const container = document.getElementById('article-container');
+            try {
+                const doc = await firebase.firestore().collection('posts').doc(postId).get();
+                if (!doc.exists) {
+                    container.innerHTML = '<div class="empty-feed">Пост не найден.</div>';
+                    return;
+                }
+
+                const data = doc.data();
+                document.title = `${data.title || 'Без заголовка'} - CodeLink`;
+                const timeAgo = window.formatTimeAgo(data.timestamp);
+                const tagsHtml = (data.tags || []).map(tag => `<a href="#" class="tag">${tag}</a>`).join(' ');
+
+                // Формирование HTML для изображений
+                let imagesHtml = '';
+                if (data.imageUrls && data.imageUrls.length > 0) {
+                    imagesHtml = data.imageUrls.map(url => `<img src="${url}" alt="Post Image" style="max-width: 100%; border-radius: 8px; margin: 16px 0;">`).join('');
+                }
+
+                // Формирование HTML для файлов
+                let filesHtml = '';
+                if (data.fileUrls && data.fileUrls.length > 0) {
+                    filesHtml = '<div style="margin: 16px 0;"><strong>Прикрепленные файлы:</strong><ul>';
+                    data.fileUrls.forEach(file => {
+                        filesHtml += `<li><a href="${file.url}" target="_blank" rel="noopener noreferrer"><i class="fas fa-file"></i> ${file.name}</a></li>`;
+                    });
+                    filesHtml += '</ul></div>';
+                }
+
+                container.innerHTML = `
+                <div class="article-header">
+                    <h1 class="article-title">${data.title || 'Без заголовка'}</h1>
+                    <div class="article-meta">
+                        <div class="article-meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>${data.username || 'Аноним'}</span>
+                        </div>
+                        <div class="article-meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>${timeAgo}</span>
+                        </div>
+                    </div>
+                    <div class="tags">
+                        ${tagsHtml}
+                    </div>
+                </div>
+                <div class="article-content">
+                    <p>${data.content || ''}</p>
+                    ${imagesHtml}
+                    ${filesHtml}
+                </div>
+                <div class="article-actions">
+                    <button class="action-btn upvote" id="like-btn">
+                        <i class="fas fa-heart"></i>
+                        <span id="likes-count">${data.likes ? data.likes.length : 0}</span>
+                    </button>
+                    <button class="action-btn reply">
+                        <i class="fas fa-comment"></i>
+                        <span>Ответить</span>
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-share"></i>
+                        <span>Поделиться</span>
+                    </button>
+                    <button class="action-btn" id="bookmark-btn">
+                        <i class="fas fa-bookmark"></i>
+                        <span>Сохранить</span>
+                    </button>
+                </div>
+                <div class="comments-section">
+                    <h2 class="comments-header" id="comments-count">0 комментариев</h2>
+                    <div class="comment-form">
+                        <textarea class="comment-input" id="comment-text" placeholder="Напишите ваш комментарий..."></textarea>
+                        <div class="comment-actions">
+                            <button class="btn btn-primary" id="submit-comment">Отправить</button>
+                        </div>
+                    </div>
+                    <div class="comments-list" id="comments-list">
+                        <!-- Комментарии будут загружены сюда -->
+                    </div>
+                </div>
+                `;
+
+                // Обработчики событий для кнопок
+                document.getElementById('like-btn').addEventListener('click', () => toggleLike(postId, data.likes || []));
+                document.getElementById('submit-comment').addEventListener('click', () => addComment(postId));
+                
+                // Загрузка комментариев
+                loadComments(postId);
+
+                // Проверка, лайкнул ли текущий пользователь
+                const currentUser = firebase.auth().currentUser;
+                if (currentUser && data.likes && data.likes.includes(currentUser.uid)) {
+                    document.getElementById('like-btn').classList.add('liked');
+                }
+            } catch (error) {
+                console.error("Ошибка загрузки поста: ", error);
+                container.innerHTML = '<div class="empty-feed">Ошибка загрузки поста.</div>';
+            }
+        }
+
+        async function toggleLike(postId, currentLikes) {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Войдите, чтобы поставить лайк.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const likeBtn = document.getElementById('like-btn');
+            const likesCountSpan = document.getElementById('likes-count');
+            const isLiked = likeBtn.classList.contains('liked');
+            let newLikes = [...currentLikes];
+
+            if (isLiked) {
+                // Удалить лайк
+                newLikes = newLikes.filter(uid => uid !== user.uid);
+                likeBtn.classList.remove('liked');
+            } else {
+                // Добавить лайк
+                newLikes.push(user.uid);
+                likeBtn.classList.add('liked');
+            }
+
+            try {
+                await firebase.firestore().collection('posts').doc(postId).update({
+                    likes: newLikes
+                });
+                likesCountSpan.textContent = newLikes.length;
+            } catch (error) {
+                console.error("Ошибка при обновлении лайка: ", error);
+                // Откат изменений в UI в случае ошибки
+                if (isLiked) {
+                    likeBtn.classList.add('liked');
+                } else {
+                    likeBtn.classList.remove('liked');
+                }
+            }
+        }
+
+        async function addComment(postId) {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Войдите, чтобы оставить комментарий.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const commentText = document.getElementById('comment-text').value.trim();
+            if (!commentText) {
+                alert('Введите текст комментария.');
+                return;
+            }
+
+            try {
+                const comment = {
+                    uid: user.uid,
+                    username: user.displayName || user.email.split('@')[0],
+                    avatar: user.photoURL || `https://placehold.co/32x32/58a6ff/ffffff?text=${(user.displayName || user.email)[0].toUpperCase()}`,
+                    text: commentText,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await firebase.firestore().collection('posts').doc(postId).update({
+                    comments: firebase.firestore.FieldValue.arrayUnion(comment)
+                });
+
+                document.getElementById('comment-text').value = '';
+                loadComments(postId); // Перезагрузка комментариев
+            } catch (error) {
+                console.error("Ошибка при добавлении комментария: ", error);
+                alert('Ошибка при добавлении комментария.');
+            }
+        }
+
+        async function loadComments(postId) {
+            try {
+                const doc = await firebase.firestore().collection('posts').doc(postId).get();
+                if (!doc.exists) return;
+
+                const data = doc.data();
+                const comments = data.comments || [];
+                const commentsList = document.getElementById('comments-list');
+                const commentsCount = document.getElementById('comments-count');
+
+                commentsCount.textContent = `${comments.length} ${getCommentWordForm(comments.length)}`;
+
+                if (comments.length === 0) {
+                    commentsList.innerHTML = '<p style="color: var(--text-secondary);">Пока нет комментариев. Будьте первым!</p>';
+                    return;
+                }
+
+                // Сортировка комментариев по времени (новые сверху)
+                comments.sort((a, b) => {
+                    const aTime = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+                    const bTime = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+                    return bTime - aTime;
+                });
+
+                let commentsHtml = '';
+                comments.forEach(comment => {
+                    const timeAgo = window.formatTimeAgo(comment.timestamp);
+                    commentsHtml += `
+                    <div class="comment">
+                        <div class="comment-header">
+                            <img src="${comment.avatar || `https://placehold.co/32x32/58a6ff/ffffff?text=${(comment.username || 'U')[0].toUpperCase()}`}" 
+                                 alt="${comment.username}" class="comment-avatar">
+                            <span class="comment-author">${comment.username || 'Аноним'}</span>
+                            <span class="comment-timestamp">${timeAgo}</span>
+                        </div>
+                        <div class="comment-content">
+                            ${comment.text || ''}
+                        </div>
+                        <div class="comment-actions">
+                            <div class="comment-action">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span>0</span>
+                            </div>
+                            <div class="comment-action">
+                                <i class="fas fa-comment"></i>
+                                <span>Ответить</span>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+
+                commentsList.innerHTML = commentsHtml;
+            } catch (error) {
+                console.error("Ошибка загрузки комментариев: ", error);
+            }
+        }
+
+        function getCommentWordForm(number) {
+            const cases = [2, 0, 1, 1, 1, 2];
+            const titles = ['комментарий', 'комментария', 'комментариев'];
+            return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+        }
+    </script>
+</body>
+</html>
