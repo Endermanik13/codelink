@@ -153,6 +153,7 @@
                     }
 
                     let postsHtml = '';
+                    const currentUser = firebase.auth().currentUser;
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
                         const postId = doc.id;
@@ -165,8 +166,12 @@
                         const authorGravatarUrl = `https://www.gravatar.com/avatar/${authorEmailHash}?d=identicon&s=40`;
                         const authorAvatarUrl = data.avatar || authorGravatarUrl;
 
+                        // Проверка, является ли текущий пользователь автором поста
+                        const isAuthor = currentUser && currentUser.uid === data.uid;
+                        const deleteButtonHtml = isAuthor ? `<button class="post-delete-btn" data-id="${postId}"><i class="fas fa-trash"></i> Удалить</button>` : '';
+
                         postsHtml += `
-                        <article class="post-card">
+                        <article class="post-card" data-id="${postId}">
                             <div class="post-header">
                                 <img src="${authorAvatarUrl}" 
                                      alt="${data.username}" class="post-avatar">
@@ -174,6 +179,7 @@
                                     <div class="post-username">${data.username || 'Аноним'}</div>
                                     <div class="post-meta">${timeAgo}</div>
                                 </div>
+                                ${deleteButtonHtml}
                             </div>
                             <h2 class="post-title"><a href="post.html?id=${postId}">${data.title || 'Без заголовка'}</a></h2>
                             <div class="post-excerpt">${excerpt}</div>
@@ -197,6 +203,25 @@
                     });
 
                     postsFeed.innerHTML = postsHtml;
+
+                    // Добавляем обработчики событий для кнопок удаления
+                    document.querySelectorAll('.post-delete-btn').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            const postId = button.getAttribute('data-id');
+                            if (confirm('Вы уверены, что хотите удалить этот пост?')) {
+                                try {
+                                    await firebase.firestore().collection('posts').doc(postId).delete();
+                                    // Перезагружаем посты после удаления
+                                    loadPosts();
+                                } catch (error) {
+                                    console.error("Ошибка при удалении поста: ", error);
+                                    alert('Ошибка при удалении поста.');
+                                }
+                            }
+                        });
+                    });
+
                 } catch (error) {
                     console.error("Ошибка загрузки постов: ", error);
                     postsFeed.innerHTML = '<div class="empty-feed">Ошибка загрузки постов.</div>';
