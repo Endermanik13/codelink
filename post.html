@@ -100,19 +100,23 @@
     <script src="script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Проверка авторизации
+             // Проверка авторизации для шапки
             firebase.auth().onAuthStateChanged(user => {
+                 const authButtons = document.getElementById('auth-buttons');
+                const userMenu = document.getElementById('user-menu');
+
                 if (user) {
+                    authButtons.style.display = 'none';
+                    userMenu.style.display = 'flex';
+                    
                     // Установка данных в шапке
                     const emailHashHeader = CryptoJS.MD5(user.email.toLowerCase().trim()).toString();
                     const gravatarUrlHeader = `https://www.gravatar.com/avatar/${emailHashHeader}?d=identicon&s=32`;
                     document.getElementById('user-avatar-header').src = gravatarUrlHeader;
                     document.getElementById('username-header').textContent = user.displayName || user.email.split('@')[0];
-                    document.getElementById('auth-buttons').style.display = 'none';
-                    document.getElementById('user-menu').style.display = 'flex';
                 } else {
-                    document.getElementById('auth-buttons').style.display = 'flex';
-                    document.getElementById('user-menu').style.display = 'none';
+                    authButtons.style.display = 'flex';
+                    userMenu.style.display = 'none';
                 }
             });
 
@@ -168,6 +172,11 @@
                 const authorGravatarUrl = `https://www.gravatar.com/avatar/${authorEmailHash}?d=identicon&s=40`;
                 const authorAvatarUrl = data.avatar || authorGravatarUrl;
 
+                // Проверка, является ли текущий пользователь автором поста
+                const currentUser = firebase.auth().currentUser;
+                const isAuthor = currentUser && currentUser.uid === data.uid;
+                const deleteButtonHtml = isAuthor ? `<button class="action-btn" id="delete-post-btn"><i class="fas fa-trash"></i> Удалить</button>` : '';
+
                 container.innerHTML = `
                 <div class="article-header">
                     <h1 class="article-title">${data.title || 'Без заголовка'}</h1>
@@ -207,10 +216,16 @@
                         <i class="fas fa-bookmark"></i>
                         <span>Сохранить</span>
                     </button>
+                    ${deleteButtonHtml}
                 </div>
                 <div class="comments-section">
                     <h2 class="comments-header" id="comments-count">0 комментариев</h2>
-                    <div class="comment-form">
+                     <!-- Сообщение для неавторизованных пользователей -->
+                    <div id="auth-required-comment" class="empty-feed" style="display: none; padding: 10px; font-size: 0.9rem;">
+                        <p>Чтобы оставить комментарий, пожалуйста, <a href="login.html">войдите</a> или <a href="register.html">зарегистрируйтесь</a>.</p>
+                    </div>
+                    <!-- Форма комментариев (видна только авторизованным) -->
+                    <div class="comment-form" id="comment-form-container" style="display: none;">
                         <textarea class="comment-input" id="comment-text" placeholder="Напишите ваш комментарий..."></textarea>
                         <div class="comment-actions">
                             <button class="btn btn-primary" id="submit-comment">Отправить</button>
@@ -224,16 +239,44 @@
 
                 // Обработчики событий для кнопок
                 document.getElementById('like-btn').addEventListener('click', () => toggleLike(postId, data.likes || []));
-                document.getElementById('submit-comment').addEventListener('click', () => addComment(postId));
                 
-                // Загрузка комментариев
-                loadComments(postId);
+                // Добавляем обработчик для кнопки удаления поста, если она есть
+                const deletePostBtn = document.getElementById('delete-post-btn');
+                if (deletePostBtn) {
+                    deletePostBtn.addEventListener('click', async () => {
+                         if (confirm('Вы уверены, что хотите удалить этот пост?')) {
+                            try {
+                                await firebase.firestore().collection('posts').doc(postId).delete();
+                                alert('Пост удален.');
+                                window.location.href = 'index.html'; // Перенаправляем на главную
+                            } catch (error) {
+                                console.error("Ошибка при удалении поста: ", error);
+                                alert('Ошибка при удалении поста.');
+                            }
+                        }
+                    });
+                }
 
                 // Проверка, лайкнул ли текущий пользователь
-                const currentUser = firebase.auth().currentUser;
                 if (currentUser && data.likes && data.likes.includes(currentUser.uid)) {
                     document.getElementById('like-btn').classList.add('liked');
                 }
+
+                 // Показываем форму комментариев или сообщение о необходимости авторизации
+                const authRequiredComment = document.getElementById('auth-required-comment');
+                const commentFormContainer = document.getElementById('comment-form-container');
+                if (currentUser) {
+                    authRequiredComment.style.display = 'none';
+                    commentFormContainer.style.display = 'block';
+                    document.getElementById('submit-comment').addEventListener('click', () => addComment(postId));
+                } else {
+                    authRequiredComment.style.display = 'block';
+                    commentFormContainer.style.display = 'none';
+                }
+
+                // Загрузка комментариев
+                loadComments(postId);
+
             } catch (error) {
                 console.error("Ошибка загрузки поста: ", error);
                 container.innerHTML = '<div class="empty-feed">Ошибка загрузки поста.</div>';
@@ -254,11 +297,9 @@
             let newLikes = [...currentLikes];
 
             if (isLiked) {
-                // Удалить лайк
                 newLikes = newLikes.filter(uid => uid !== user.uid);
                 likeBtn.classList.remove('liked');
             } else {
-                // Добавить лайк
                 newLikes.push(user.uid);
                 likeBtn.classList.add('liked');
             }
@@ -270,7 +311,6 @@
                 likesCountSpan.textContent = newLikes.length;
             } catch (error) {
                 console.error("Ошибка при обновлении лайка: ", error);
-                // Откат изменений в UI в случае ошибки
                 if (isLiked) {
                     likeBtn.classList.add('liked');
                 } else {
@@ -282,8 +322,9 @@
         // ИСПРАВЛЕННАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ КОММЕНТАРИЯ
         async function addComment(postId) {
             const user = firebase.auth().currentUser;
+            // Дополнительная проверка
             if (!user) {
-                alert('Войдите, чтобы оставить комментарий.');
+                 alert('Войдите, чтобы оставить комментарий.');
                 window.location.href = 'login.html';
                 return;
             }
