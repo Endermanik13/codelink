@@ -86,34 +86,41 @@
                 </div>
             </header>
             <div class="profile-container" id="profile-container">
-                <div class="profile-header">
-                    <!-- Используем Gravatar -->
-                    <img id="profile-avatar" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=100" class="profile-avatar" alt="Profile Avatar">
-                    <div class="profile-info">
-                        <h1 class="profile-username" id="profile-username">Загрузка...</h1>
-                        <p class="profile-email" id="profile-email"></p>
-                        <!-- Кнопка ведет на Gravatar -->
-                        <a href="https://ru.gravatar.com/connect/" target="_blank" rel="noopener noreferrer" class="change-avatar-btn">Изменить аватар на Gravatar</a>
-                    </div>
+                 <!-- Сообщение для неавторизованных пользователей -->
+                <div id="auth-required-profile" class="empty-feed" style="display: none;">
+                    <p>Чтобы просмотреть профиль, пожалуйста, <a href="login.html">войдите</a> или <a href="register.html">зарегистрируйтесь</a>.</p>
                 </div>
-                <div class="profile-form">
-                    <h2 class="card-title">Редактировать профиль</h2>
-                    <div class="form-row">
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="profile-username-input" class="form-label">Имя пользователя</label>
-                                <input type="text" id="profile-username-input" class="form-input" placeholder="Имя пользователя">
-                            </div>
-                        </div>
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="profile-email-input" class="form-label">Email</label>
-                                <input type="email" id="profile-email-input" class="form-input" placeholder="Email" disabled>
-                            </div>
+                <!-- Содержимое профиля (видно только авторизованным) -->
+                <div id="profile-content" style="display: none;">
+                    <div class="profile-header">
+                        <!-- Используем Gravatar -->
+                        <img id="profile-avatar" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=100" class="profile-avatar" alt="Profile Avatar">
+                        <div class="profile-info">
+                            <h1 class="profile-username" id="profile-username">Загрузка...</h1>
+                            <p class="profile-email" id="profile-email"></p>
+                            <!-- Кнопка ведет на Gravatar -->
+                            <a href="https://ru.gravatar.com/connect/" target="_blank" rel="noopener noreferrer" class="change-avatar-btn">Изменить аватар на Gravatar</a>
                         </div>
                     </div>
-                    <div class="form-actions-profile">
-                        <button class="btn btn-primary" id="save-profile-btn">Сохранить изменения</button>
+                    <div class="profile-form">
+                        <h2 class="card-title">Редактировать профиль</h2>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="profile-username-input" class="form-label">Имя пользователя</label>
+                                    <input type="text" id="profile-username-input" class="form-input" placeholder="Имя пользователя">
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="profile-email-input" class="form-label">Email</label>
+                                    <input type="email" id="profile-email-input" class="form-input" placeholder="Email" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions-profile">
+                            <button class="btn btn-primary" id="save-profile-btn">Сохранить изменения</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -125,20 +132,32 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Проверка авторизации
             firebase.auth().onAuthStateChanged(user => {
-                if (!user) {
-                    window.location.href = 'login.html';
-                } else {
+                const authRequiredProfile = document.getElementById('auth-required-profile');
+                const profileContent = document.getElementById('profile-content');
+                const authButtons = document.getElementById('auth-buttons');
+                const userMenu = document.getElementById('user-menu');
+
+                 if (user) {
+                    // Пользователь авторизован
+                    authButtons.style.display = 'none';
+                    userMenu.style.display = 'flex';
+                    authRequiredProfile.style.display = 'none';
+                    profileContent.style.display = 'block';
+
                     // Установка данных в шапке
                     const emailHashHeader = CryptoJS.MD5(user.email.toLowerCase().trim()).toString();
                     const gravatarUrlHeader = `https://www.gravatar.com/avatar/${emailHashHeader}?d=identicon&s=32`;
-                    const avatarUrlHeader = user.photoURL || gravatarUrlHeader;
-                    document.getElementById('user-avatar-header').src = avatarUrlHeader;
+                    document.getElementById('user-avatar-header').src = gravatarUrlHeader;
                     document.getElementById('username-header').textContent = user.displayName || user.email.split('@')[0];
-                    document.getElementById('auth-buttons').style.display = 'none';
-                    document.getElementById('user-menu').style.display = 'flex';
-                    
+
                     // Загрузка данных профиля
                     loadProfile(user);
+                } else {
+                    // Пользователь не авторизован
+                    authButtons.style.display = 'flex';
+                    userMenu.style.display = 'none';
+                    authRequiredProfile.style.display = 'block';
+                    profileContent.style.display = 'none';
                 }
             });
 
@@ -153,13 +172,12 @@
         function loadProfile(user) {
             document.getElementById('profile-username').textContent = user.displayName || 'Пользователь';
             document.getElementById('profile-email').textContent = user.email;
-            
+
             // Установка аватара в профиле (Gravatar)
             const emailHash = CryptoJS.MD5(user.email.toLowerCase().trim()).toString();
             const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon&s=100`;
-            // const avatarUrl = user.photoURL || gravatarUrl; // Firebase photoURL не используется для Gravatar
-            document.getElementById('profile-avatar').src = gravatarUrl; // Всегда показываем Gravatar
-            
+            document.getElementById('profile-avatar').src = gravatarUrl;
+
             document.getElementById('profile-username-input').value = user.displayName || '';
             document.getElementById('profile-email-input').value = user.email;
         }
