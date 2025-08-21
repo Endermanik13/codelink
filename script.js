@@ -1,11 +1,12 @@
 // script.js
+
 document.addEventListener('DOMContentLoaded', function () {
-    // Инициализация иконок Lucide
+    // Инициализация иконок Lucide (если используете)
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 
-    // Мобильное меню
+    // Мобильное меню (логика из предыдущих файлов)
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileOverlay = document.getElementById('mobileOverlay');
     const sidebar = document.getElementById('sidebar');
@@ -23,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.style.overflow = '';
         });
 
-        // Закрытие меню при клике на пункты навигации
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function () {
                 sidebar.classList.remove('open');
@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Обработка изменения размера окна
         window.addEventListener('resize', function () {
             if (window.innerWidth > 1024) {
                 sidebar.classList.remove('open');
