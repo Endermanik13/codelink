@@ -13,6 +13,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- CryptoJS для Gravatar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <!-- Firebase Config -->
     <script>
         const firebaseConfig = {
@@ -91,8 +93,12 @@
                     <h1 class="create-post-title">Создать новый пост</h1>
                     <p class="create-post-subtitle">Поделитесь своими знаниями, задайте вопрос или начните обсуждение</p>
                 </div>
+                 <!-- Сообщение для неавторизованных пользователей -->
+                <div id="auth-required-message" class="empty-feed" style="display: none;">
+                    <p>Чтобы создать пост, пожалуйста, <a href="login.html">войдите</a> или <a href="register.html">зарегистрируйтесь</a>.</p>
+                </div>
                 <!-- Create Post Form -->
-                <form class="create-post-form" id="createPostForm">
+                <form class="create-post-form" id="createPostForm" style="display: none;">
                     <!-- Left Column -->
                     <div class="left-column">
                         <div class="form-group">
@@ -205,18 +211,35 @@
     <script src="script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Проверка авторизации
+             // Проверка авторизации
             firebase.auth().onAuthStateChanged(user => {
-                if (!user) {
-                    window.location.href = 'login.html';
-                } else {
+                const authButtons = document.getElementById('auth-buttons');
+                const userMenu = document.getElementById('user-menu');
+                const authRequiredMessage = document.getElementById('auth-required-message');
+                const createPostForm = document.getElementById('createPostForm');
+
+                if (user) {
+                    // Пользователь авторизован
+                    authButtons.style.display = 'none';
+                    userMenu.style.display = 'flex';
+                    
                     // Установка данных в шапке
                     const emailHashHeader = CryptoJS.MD5(user.email.toLowerCase().trim()).toString();
                     const gravatarUrlHeader = `https://www.gravatar.com/avatar/${emailHashHeader}?d=identicon&s=32`;
                     document.getElementById('user-avatar-header').src = gravatarUrlHeader;
                     document.getElementById('username-header').textContent = user.displayName || user.email.split('@')[0];
-                    document.getElementById('auth-buttons').style.display = 'none';
-                    document.getElementById('user-menu').style.display = 'flex';
+                    
+                    // Показываем форму создания поста
+                    authRequiredMessage.style.display = 'none';
+                    createPostForm.style.display = 'grid'; // Используем grid, как в CSS
+                } else {
+                    // Пользователь не авторизован
+                    authButtons.style.display = 'flex';
+                    userMenu.style.display = 'none';
+                    
+                    // Показываем сообщение о необходимости авторизации
+                    authRequiredMessage.style.display = 'block';
+                    createPostForm.style.display = 'none';
                 }
             });
 
@@ -224,6 +247,7 @@
                 firebase.auth().signOut();
             });
 
+            // --- Остальная логика формы (теги, файлы, отправка) ---
             // Логика тегов
             let tags = [];
             const postTagsInput = document.getElementById('postTags');
@@ -344,17 +368,15 @@
                 `;
                 fileElement.querySelector('.remove-file').addEventListener('click', function() {
                     fileElement.remove();
-                    // Здесь можно удалить файл из временного хранилища, если нужно
                 });
                 uploadedFilesContainer.appendChild(fileElement);
 
-                // Сохраняем файл в dataset для последующей загрузки
                 fileElement.dataset.fileObject = JSON.stringify({
                     name: file.name,
                     type: file.type,
                     size: file.size
                 });
-                fileElement.file = file; // Прямая ссылка на объект файла
+                fileElement.file = file;
             }
 
             // Сохранение черновика (заглушка)
@@ -367,6 +389,7 @@
                 e.preventDefault();
                 const user = firebase.auth().currentUser;
                 if (!user) {
+                    // Дополнительная проверка на всякий случай
                     alert('Вы должны войти, чтобы создать пост.');
                     window.location.href = 'login.html';
                     return;
@@ -389,9 +412,7 @@
                     const postData = {
                         uid: user.uid,
                         username: user.displayName || user.email.split('@')[0],
-                        // authorEmail добавлен для Gravatar в других местах
-                        authorEmail: user.email, 
-                        // avatar: user.photoURL || `https://www.gravatar.com/avatar/${CryptoJS.MD5(user.email.toLowerCase().trim()).toString()}?d=identicon&s=40`,
+                        authorEmail: user.email, // Для Gravatar
                         title: title,
                         content: content,
                         tags: tags,
@@ -408,12 +429,15 @@
                     for (const fileElement of fileElements) {
                         const file = fileElement.file;
                         if (file) {
-                            // Создание уникального имени файла
-                            const fileName = `${Date.now()}_${file.name}`;
-                            const storageRef = firebase.storage().ref();
-                            const fileRef = storageRef.child(`posts/${user.uid}/${postData.timestamp.toMillis()}_${fileName}`); // Используем timestamp для уникальности
+                            // Создание уникального имени файла с использованием serverTimestamp
+                            // Получаем временную метку от сервера
+                            const timestamp = firebase.firestore.Timestamp.now();
+                            const fileName = `${timestamp.toMillis()}_${file.name}`; // Используем toMillis() правильно
                             
-                            const snapshot = await fileRef.put(file); // Основная загрузка
+                            const storageRef = firebase.storage().ref();
+                            const fileRef = storageRef.child(`posts/${user.uid}/${fileName}`);
+                            
+                            const snapshot = await fileRef.put(file);
                             const downloadURL = await snapshot.ref.getDownloadURL();
 
                             if (file.type.startsWith('image/')) {
