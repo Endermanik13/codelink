@@ -1,182 +1,96 @@
+<!-- register.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Регистрация | CodeLink</title>
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-  <!-- Подключаем Firebase (просто и надёжно) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-
-<!-- Твой конфиг Firebase -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw",
-    authDomain: "codelinked2347.firebaseapp.com",
-    projectId: "codelinked2347",
-    storageBucket: "codelinked2347.firebasestorage.app",
-    messagingSenderId: "965987995013",
-    appId: "1:965987995013:web:772c8889a527be574788ec",
-    measurementId: "G-2CWM5T0CSP"
-  };
-
-  // Инициализация Firebase
-  firebase.initializeApp(firebaseConfig);
-</script>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --bg-card: #161b22;
-      --text: #c9d1d9;
-      --text-muted: #8b949e;
-      --border: #30363d;
-      --accent: #58a6ff;
-      --danger: #f85149;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      padding: 40px;
-      margin: 0;
-    }
-    .form-container {
-      max-width: 440px;
-      margin: 0 auto;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 32px;
-    }
-    h2 {
-      margin: 0 0 16px 0;
-      font-size: 24px;
-    }
-    p {
-      color: var(--text-muted);
-      font-size: 14px;
-      margin: 0 0 24px 0;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: #0d1117;
-      color: var(--text);
-      font-size: 14px;
-    }
-    .btn {
-      width: 100%;
-      padding: 12px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .btn:hover {
-      opacity: 0.9;
-    }
-    .error {
-      color: var(--danger);
-      font-size: 14px;
-      margin: 10px 0;
-      min-height: 20px;
-    }
-    .text-center {
-      text-align: center;
-      color: var(--text-muted);
-      margin-top: 20px;
-      font-size: 14px;
-    }
-    a {
-      color: var(--accent);
-    }
-    .avatar-preview {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      margin: 10px auto;
-      background: #30363d;
-      display: block;
-      object-fit: cover;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - CodeLink</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Firebase Config (вставь свой) -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGcQafcxrR3_8OE3Gs51nLYqVBRiavfTw", // Заменить на свой
+            authDomain: "codelinked2347.firebaseapp.com",
+            projectId: "codelinked2347",
+            storageBucket: "codelinked2347.firebasestorage.app",
+            messagingSenderId: "965987995013",
+            appId: "1:965987995013:web:772c8889a527be574788ec"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </head>
 <body>
-  <div class="form-container">
-    <h2>Создать аккаунт</h2>
-    <p>Присоединяйся к CodeLink — соцсети для разработчиков</p>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Создать аккаунт</h2>
+            <p>Присоединяйтесь к сообществу CodeLink</p>
+            <form id="registerForm">
+                <input type="text" id="username" placeholder="Имя пользователя" required>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Пароль" required>
+                <label>Аватар (необязательно)</label>
+                <input type="file" id="avatar" accept="image/*">
+                <div class="error" id="register-error"></div>
+                <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+            </form>
+            <p class="text-center">
+                Уже есть аккаунт? <a href="login.html">Войти</a>
+            </p>
+        </div>
+    </div>
 
-    <input type="text" id="username" placeholder="Логин" />
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Пароль" />
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const avatarFile = document.getElementById('avatar').files[0];
+            const errorDiv = document.getElementById('register-error');
 
-    <label>Аватар (опционально)</label>
-    <input type="file" id="avatar" accept="image/*" onchange="previewImage(event)" />
-    <img id="preview" class="avatar-preview" src="https://placehold.co/64x64/58a6ff/ffffff?text=U" alt="Preview">
+            try {
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
 
-    <div class="error" id="error"></div>
-    <button class="btn" onclick="register()">Зарегистрироваться</button>
+                let photoURL = `https://placehold.co/40x40/58a6ff/ffffff?text=${username[0].toUpperCase()}`;
 
-    <p class="text-center">
-      Уже есть аккаунт? <a href="login.html">Войти</a>
-    </p>
-  </div>
+                // Загрузка аватара, если выбран
+                if (avatarFile) {
+                    if (avatarFile.size > 5 * 1024 * 1024) { // 5MB
+                        throw new Error('Аватар слишком большой (макс. 5MB)');
+                    }
+                    const storageRef = firebase.storage().ref();
+                    const avatarRef = storageRef.child(`avatars/${user.uid}`);
+                    const snapshot = await avatarRef.put(avatarFile);
+                    photoURL = await snapshot.ref.getDownloadURL();
+                }
 
-  <script>
-    function previewImage(event) {
-      const file = event.target.files[0];
-      const preview = document.getElementById('preview');
-      if (file) {
-        preview.src = URL.createObjectURL(file);
-      }
-    }
+                // Обновление профиля пользователя
+                await user.updateProfile({
+                    displayName: username,
+                    photoURL: photoURL
+                });
 
-    async function register() {
-      const username = document.getElementById('username').value.trim();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const avatarFile = document.getElementById('avatar').files[0];
-      const error = document.getElementById('error');
+                // Создание документа пользователя в Firestore (опционально)
+                // await firebase.firestore().collection('users').doc(user.uid).set({
+                //     uid: user.uid,
+                //     username: username,
+                //     email: email,
+                //     photoURL: photoURL,
+                //     createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                // });
 
-      if (!username || !email || !password) {
-        error.textContent = 'Заполните все поля';
-        return;
-      }
-
-      try {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-
-        let photoURL = `https://placehold.co/40x40/58a6ff/ffffff?text=${username[0].toUpperCase()}`;
-
-        if (avatarFile) {
-          const storageRef = firebase.storage().ref();
-          const fileRef = storageRef.child(`avatars/${user.uid}`);
-          await fileRef.put(avatarFile);
-          photoURL = await fileRef.getDownloadURL();
-        }
-
-        await user.updateProfile({
-          displayName: username,
-          photoURL: photoURL
+                alert('Регистрация успешна!');
+                window.location.href = 'index.html'; // Перенаправление на главную
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
         });
-
-        alert('Регистрация успешна!');
-        window.location.href = 'index.html';
-      } catch (err) {
-        error.textContent = err.message;
-      }
-    }
-  </script>
+    </script>
 </body>
 </html>
